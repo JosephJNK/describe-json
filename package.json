@@ -1,0 +1,20 @@
+{
+  "name": "jattern",
+  "description": "Strongly typed algebraic data types and pattern matching for JSON",
+  "author": "Joseph Junker <joseph.jnk@gmail.com>",
+  "dependencies": {
+    "async": "0.2.x",
+    "coffee-script-redux": "2.0.x",
+    "underscore": "1.5.x"
+  },
+  "devDependencies": {
+    "mocha": "1.15.x",
+    "should": "2.1.x"
+  },
+  "engine": "node >= 10.22",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "test": "mocha"
+  }
+}
