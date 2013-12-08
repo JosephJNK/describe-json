@@ -48,3 +48,14 @@ describe 'typeSystem', ->
 
       typeClass3 = newtypeclass: name: 'Type'
       system.register(typeClass3).should.eql "'Type' is already registered as a type"
+
+    it 'should enforce capitalization', ->
+      type = newtype: name: 'type'
+      typeClass = newtypeclass: name: 'typeclass'
+      type2 = newtype: name: '1Type'
+      typeClass2 = newtypeclass: name: '1Typeclass'
+      system = typeSystem.init()
+      system.register(type).should.eql 'Type names must begin with a capital letter'
+      system.register(typeClass).should.eql 'Typeclass names must begin with a capital letter'
+      system.register(type2).should.eql 'Type names must begin with a capital letter'
+      system.register(typeClass2).should.eql 'Typeclass names must begin with a capital letter'

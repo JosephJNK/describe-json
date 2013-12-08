@@ -4,15 +4,17 @@ module.exports =
     registeredTypeClasses = {}
 
     validateNewType = (newtype) ->
-      return 'type must have a name' unless newtype.name?
+      return 'Type must have a name' unless newtype.name?
       return "'#{newtype.name}' is already registered as a type" if registeredTypes[newtype.name]?
       return "'#{newtype.name}' is already registered as a typeclass" if registeredTypeClasses[newtype.name]?
+      return 'Type names must begin with a capital letter' unless newtype.name.match /^[A-Z]/
       null
 
     validateNewTypeClass = (newtypeclass) ->
-      return 'type must have a name' unless newtypeclass.name?
+      return 'Typeclass must have a name' unless newtypeclass.name?
       return "'#{newtypeclass.name}' is already registered as a typeclass" if registeredTypeClasses[newtypeclass.name]?
       return "'#{newtypeclass.name}' is already registered as a type" if registeredTypes[newtypeclass.name]?
+      return 'Typeclass names must begin with a capital letter' unless newtypeclass.name.match /^[A-Z]/
       null
 
     registerType = ({newtype}) ->
