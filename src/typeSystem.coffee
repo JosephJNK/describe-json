@@ -39,4 +39,5 @@ module.exports =
 
       types: -> Object.keys registeredTypes
       typeClasses: -> Object.keys registeredTypeClasses
+      getDataForType: (type) -> return registeredTypes[type]
     }
