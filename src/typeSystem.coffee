@@ -3,6 +3,8 @@ module.exports =
     registeredTypes = {}
     registeredTypeClasses = {}
 
+    recognizers = require './nativeTypeRecognizers'
+
     validateNewType = (newtype) ->
       return 'Type must have a name' unless newtype.name?
       return "'#{newtype.name}' is already registered as a type" if registeredTypes[newtype.name]?
@@ -40,4 +42,6 @@ module.exports =
       types: -> Object.keys registeredTypes
       typeClasses: -> Object.keys registeredTypeClasses
       getDataForType: (type) -> return registeredTypes[type]
+
+      recognizers: recognizers
     }
