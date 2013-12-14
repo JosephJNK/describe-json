@@ -1,3 +1,4 @@
+{inspect} = require 'util'
 module.exports =
   init: (system) ->
     (type, data) ->

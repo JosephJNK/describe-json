@@ -1,3 +1,5 @@
+generateRecognizer = require './generateRecognizer'
+
 module.exports =
   init: ->
     registeredTypes = {}
@@ -23,6 +25,7 @@ module.exports =
       err = validateNewType newtype
       return err if err?
       name = newtype.name
+      recognizers[name] = generateRecognizer newtype, recognizers
       registeredTypes[name] = newtype
       null
 

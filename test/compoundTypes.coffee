@@ -18,6 +18,6 @@ describe 'recognizer', ->
 
       recognize = recognizer.init system
 
-      recognize('IntField', {aField: 1}).should.be true
-      recognize('IntField', {aField: 1.5}).should.be false
-      recognize('IntField', {foo: 1}).should.be false
+      recognize('IntField', {aField: 1}).should.eql true
+      recognize('IntField', {aField: 1.5}).should.eql false
+      recognize('IntField', {foo: 1}).should.eql false
