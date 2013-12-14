@@ -1,4 +1,7 @@
 module.exports =
   init: (system) ->
     (type, data) ->
-      system.recognizers[type] data
+      if system.recognizers[type]?
+        system.recognizers[type] data
+      else
+        throw "Error: '#{type}' is not a registered type"
