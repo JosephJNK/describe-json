@@ -1,6 +1,6 @@
 {
-  "name": "jattern",
-  "description": "Strongly typed algebraic data types and pattern matching for JSON",
+  "name": "describe-data",
+  "description": "Strongly typed, declarative algebraic data types and pattern matching for JSON",
   "author": "Joseph Junker <joseph.jnk@gmail.com>",
   "dependencies": {
     "async": "0.2.x",

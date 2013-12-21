@@ -3,8 +3,7 @@ typeSystem = require '../src/typeSystem'
 
 describe 'recognizer', ->
 
-  describe 'compound types', ->
-
+  describe.skip 'compound types, ASTs', ->
     it 'should recognize an object with one Int field', ->
       system = typeSystem.init()
 
@@ -21,6 +20,7 @@ describe 'recognizer', ->
       recognize('IntField', {aField: 1}).should.eql true
       recognize('IntField', {aField: 1.5}).should.eql false
       recognize('IntField', {foo: 1}).should.eql false
+
 
     it 'should recognize an object with multiple fields', ->
       system = typeSystem.init()
