@@ -113,12 +113,15 @@ describe 'recognizer', ->
 
       parsed = recognize('NaN', NaN)
 
-      parsed.should.eql
-        matched: true
-        data: NaN
-        typedata:
-          iscontainer: false
-          type: 'NaN'
+      console.log parsed
+
+      parsed.matched.should.eql true
+      #NaN != NaN yaaaaaaaay
+      isNaN(parsed.data).should.eql true
+      parsed.typedata.type.should.eql 'NaN'
+      parsed.typedata.iscontainer.should.eql false
+
+      console.log 'wooo'
 
       recognize('NaN', {}).matched.should.eql false
       recognize('NaN', 3).matched.should.eql false
