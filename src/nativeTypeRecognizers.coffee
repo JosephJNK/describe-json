@@ -37,5 +37,26 @@ module.exports =
     res = matched: x is undefined
     if res.matched then wrapNonContainer(x, 'Undefined') else res
 
-  Array: (x) -> check.call(x) is '[object Array]'
-  Object: (x) -> check.call(x) is '[object Object]'
+  Array: (x) ->
+    matched = check.call(x) is '[object Array]'
+    if matched
+      matched: true
+      data: x
+      typedata:
+        type: 'Array'
+        iscontainer: true
+        fields: []
+    else
+      matched: false
+
+  Object: (x) ->
+    matched = check.call(x) is '[object Object]'
+    if matched
+      matched: true
+      data: x
+      typedata:
+        type: 'Object'
+        iscontainer: true
+        fields: {}
+    else
+      matched: false
