@@ -1,4 +1,4 @@
-generateRecognizer = require './generateRecognizer'
+generateRecursiveParser = require './generateRecursiveParser'
 
 module.exports =
   init: ->
@@ -25,7 +25,7 @@ module.exports =
       err = validateNewType newtype
       return err if err?
       name = newtype.name
-      recognizers[name] = generateRecognizer newtype, recognizers
+      recognizers[name] = generateRecursiveParser newtype, recognizers
       registeredTypes[name] = newtype
       null
 

@@ -3,7 +3,7 @@ typeSystem = require '../src/typeSystem'
 
 describe 'recognizer', ->
 
-  describe.skip 'compound types, ASTs', ->
+  describe 'compound types, ASTs', ->
     it 'should recognize an object with one Int field', ->
       system = typeSystem.init()
 
@@ -17,9 +17,9 @@ describe 'recognizer', ->
 
       recognize = recognizer.init system
 
-      recognize('IntField', {aField: 1}).should.eql true
-      recognize('IntField', {aField: 1.5}).should.eql false
-      recognize('IntField', {foo: 1}).should.eql false
+      recognize('IntField', {aField: 1}).matched.should.eql true
+      recognize('IntField', {aField: 1.5}).matched.should.eql false
+      recognize('IntField', {foo: 1}).matched.should.eql false
 
 
     it 'should recognize an object with multiple fields', ->
@@ -28,19 +28,19 @@ describe 'recognizer', ->
       type = newtype:
         name: 'ThreeFields'
         fields: [
-          intField: 'Int'
-          stringField: 'String'
-          objectField: 'Object'
+          {intField: 'Int'}
+          {stringField: 'String'}
+          {objectField: 'Object'}
         ]
 
       system.register type
 
       recognize = recognizer.init system
 
-      recognize('ThreeFields', {intField: 0, stringField: '', objectField: {}}).should.eql true
-      recognize('ThreeFields', {intField: 1, stringField: '1', objectField: {foo: 2}}).should.eql true
-      recognize('ThreeFields', {intField: '1', stringField: '1', objectField: {foo: 2}}).should.eql false
-      recognize('ThreeFields', {stringField: '1', objectField: {foo: 2}}).should.eql false
+      recognize('ThreeFields', {intField: 0, stringField: '', objectField: {}}).matched.should.eql true
+      recognize('ThreeFields', {intField: 1, stringField: '1', objectField: {foo: 2}}).matched.should.eql true
+      recognize('ThreeFields', {intField: '1', stringField: '1', objectField: {foo: 2}}).matched.should.eql false
+      recognize('ThreeFields', {stringField: '1', objectField: {foo: 2}}).matched.should.eql false
 
     it 'should recognize an object with another object as a field', ->
       system = typeSystem.init()
@@ -62,8 +62,8 @@ describe 'recognizer', ->
 
       recognize = recognizer.init system
 
-      recognize('Outer', {innerField: {intField: 1} }).should.eql true
-      recognize('Outer', {innerField: {intField: 0} }).should.eql true
-      recognize('Inner', {intField: 1}).should.eql true
-      recognize('Outer', {innerField: {notIntField: 1} }).should.eql false
-      recognize('Outer', {innerField: {intField: 'foo'} }).should.eql false
+      recognize('Outer', {innerField: {intField: 1} }).matched.should.eql true
+      recognize('Outer', {innerField: {intField: 0} }).matched.should.eql true
+      recognize('Inner', {intField: 1}).matched.should.eql true
+      recognize('Outer', {innerField: {notIntField: 1} }).matched.should.eql false
+      recognize('Outer', {innerField: {intField: 'foo'} }).matched.should.eql false
