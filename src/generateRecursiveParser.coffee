@@ -56,9 +56,21 @@ parseFields = (parsers, typeDeclaration) ->
     console.log "after packing: #{inspect result}"
     return result
 
-generateParser = (newType, parsers) ->
-  if newType.fields?
-    fieldsParser = parseFields parsers, newType
-    return fieldsParser
+makeTypeclassParser = (parsers, typeclassMembers) ->
+  (dataToParse) ->
+    console.log "typeclassMembers: #{typeclassMembers}"
+    for type in typeclassMembers
+      ir = parsers[type] dataToParse
+      return ir if ir.matched
+    return matched: false
+
+generateParser = (declarationType, newType, parsers, typeclassMembers) ->
+  if declarationType is 'type'
+    if newType.fields?
+      fieldsParser = parseFields parsers, newType
+      return fieldsParser
+
+  if declarationType is 'typeclass'
+    return makeTypeclassParser parsers, typeclassMembers[newType.name]
 
 module.exports = generateParser

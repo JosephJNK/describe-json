@@ -15,27 +15,27 @@ describe 'recognizer', ->
 
   describe 'basic types', ->
 
-    it 'should recognize an Int', ->
+    it 'should recognize an Integer', ->
       recognize = recognizer.init typeSystem.init()
 
-      parsed = recognize('Int', 3)
+      parsed = recognize('Integer', 3)
 
       parsed.should.eql
         matched: true
         data: 3
         typedata:
-          type: 'Int'
+          type: 'Integer'
           iscontainer: false
 
-      recognize('Int', 3.1).matched.should.eql false
-      recognize('Int', '3').matched.should.eql false
-      recognize('Int', NaN).matched.should.eql false
-      recognize('Int', {3}).matched.should.eql false
-      recognize('Int', [3]).matched.should.eql false
-      recognize('Int', null).matched.should.eql false
-      recognize('Int', undefined).matched.should.eql false
-      recognize('Int', []).matched.should.eql false
-      recognize('Int', {}).matched.should.eql false
+      recognize('Integer', 3.1).matched.should.eql false
+      recognize('Integer', '3').matched.should.eql false
+      recognize('Integer', NaN).matched.should.eql false
+      recognize('Integer', {3}).matched.should.eql false
+      recognize('Integer', [3]).matched.should.eql false
+      recognize('Integer', null).matched.should.eql false
+      recognize('Integer', undefined).matched.should.eql false
+      recognize('Integer', []).matched.should.eql false
+      recognize('Integer', {}).matched.should.eql false
 
     it 'should recognize a Float', ->
       recognize = recognizer.init typeSystem.init()

@@ -5,6 +5,8 @@ module.exports =
     registeredTypes = {}
     registeredTypeClasses = {}
 
+    typeclassMembers = {}
+
     recognizers = require './nativeTypeRecognizers'
 
     validateNewType = (newtype) ->
@@ -21,18 +23,28 @@ module.exports =
       return 'Typeclass names must begin with a capital letter' unless newtypeclass.name.match /^[A-Z]/
       null
 
+    addMemberTypes = (typeName, typeclassNames) ->
+      for typeclassName in typeclassNames
+        if typeclassMembers[typeclassName]?
+          typeclassMembers[typeclassName].push typeName
+        else
+          typeclassMembers[typeclassName] = [typeName]
+
     registerType = ({newtype}) ->
       err = validateNewType newtype
       return err if err?
       name = newtype.name
-      recognizers[name] = generateRecursiveParser newtype, recognizers
+      recognizers[name] = generateRecursiveParser 'type', newtype, recognizers, typeclassMembers
       registeredTypes[name] = newtype
+      if newtype.typeclasses?
+        addMemberTypes name, newtype.typeclasses
       null
 
     registerTypeClass = ({newtypeclass}) ->
       err = validateNewTypeClass newtypeclass
       return err if err?
       name = newtypeclass.name
+      recognizers[name] = generateRecursiveParser 'typeclass', newtypeclass, recognizers, typeclassMembers
       registeredTypeClasses[name] = newtypeclass
       null
 

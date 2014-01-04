@@ -8,9 +8,9 @@ wrapNonContainer = (value, type) ->
     iscontainer: false
 
 module.exports =
-  Int: (x) ->
+  Integer: (x) ->
     res = matched: x == +x && x == (x|0)
-    if res.matched then wrapNonContainer(x, 'Int') else res
+    if res.matched then wrapNonContainer(x, 'Integer') else res
 
   Float: (x) ->
     res = matched: x == +x && x != (x|0)
