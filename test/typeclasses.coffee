@@ -64,3 +64,36 @@ describe 'typeclasses', ->
 
     recognize('OuterType', inner: {foo: 'foo'}).matched.should.eql false
     recognize('OuterType', inner: {int: {}}).matched.should.eql false
+
+  it 'should mix in fields', ->
+
+    memberType =
+      newtype:
+        name: "MemberType"
+        typeclasses: ["TypeclassWithField"]
+        fields: [
+          ownField: "Int"
+        ]
+
+    typeclass =
+      newtypeclass:
+        name: "TypeclassWithField"
+        fields: [
+          classField: "String"
+        ]
+
+    system = typeSystem.init()
+    system.register memberType
+    system.register typeclass
+    recognize = recognizer.init system
+
+    matched = recognize "MemberType", {ownField: 0, classField: 'foo'}
+
+    matched.matched.should.eql true
+    matched.data.should.eql {ownField: 0, classField: 'foo'}
+    matched.typedata.type.should.eql 'MemberType'
+    matched.typedata.iscontainer.should.eql true
+    matched.typedata.fields.ownField.type.should.eql 'Int'
+    matched.typedata.fields.ownField.iscontainer.should.eql false
+    matched.typedata.fields.classField.type.should.eql 'String'
+    matched.typedata.fields.classField.iscontainer.should.eql false
