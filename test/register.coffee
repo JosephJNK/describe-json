@@ -13,7 +13,7 @@ describe 'typeSystem', ->
       error = system.register type
       should.not.exist error
 
-      system.types().should.includeEql type.newtype.name
+      Object.keys(system.types).should.includeEql type.newtype.name
 
     it 'should register a typeclass', ->
       typeClass = newtypeclass: name: 'Typeclass'
@@ -22,7 +22,7 @@ describe 'typeSystem', ->
       error = system.register typeClass
       should.not.exist error
 
-      system.typeClasses().should.includeEql typeClass.newtypeclass.name
+      Object.keys(system.typeclasses).should.includeEql typeClass.newtypeclass.name
 
     it 'should not register the same name twice', ->
       type = newtype: name: 'Type'
@@ -59,3 +59,15 @@ describe 'typeSystem', ->
       system.register(typeClass).should.eql 'Typeclass names must begin with a capital letter'
       system.register(type2).should.eql 'Type names must begin with a capital letter'
       system.register(typeClass2).should.eql 'Typeclass names must begin with a capital letter'
+
+    it 'should let you register a type with Int fields', ->
+      system = typeSystem.init()
+
+      type = newtype:
+        name: 'BasicType'
+        fields: [
+          aField: 'Int'
+        ]
+
+      error = system.register type
+      should.not.exist error

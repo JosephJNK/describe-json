@@ -54,8 +54,8 @@ module.exports =
         return registerTypeClass input if input.newtypeclass?
         return 'newtype or newtypeclass keywords must be used'
 
-      types: -> Object.keys registeredTypes
-      typeClasses: -> Object.keys registeredTypeClasses
+      types: registeredTypes
+      typeclasses: registeredTypeClasses
       getDataForType: (type) -> return registeredTypes[type]
 
       recognizers: recognizers

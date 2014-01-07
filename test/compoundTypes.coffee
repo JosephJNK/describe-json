@@ -9,9 +9,8 @@ describe 'recognizer', ->
 
       type = newtype:
         name: 'IntegerField'
-        fields: [
+        fields:
           aField: 'Integer'
-        ]
 
       system.register type
 
@@ -34,11 +33,10 @@ describe 'recognizer', ->
 
       type = newtype:
         name: 'ThreeFields'
-        fields: [
-          {intField: 'Integer'}
-          {stringField: 'String'}
-          {objectField: 'Object'}
-        ]
+        fields:
+          intField: 'Integer'
+          stringField: 'String'
+          objectField: 'Object'
 
       system.register type
 
@@ -66,15 +64,13 @@ describe 'recognizer', ->
 
       outerType = newtype:
         name: 'Outer'
-        fields: [
+        fields:
           innerField: 'Inner'
-        ]
 
       innerType = newtype:
         name: 'Inner'
-        fields: [
+        fields:
           intField: 'Integer'
-        ]
 
       system.register outerType
       system.register innerType

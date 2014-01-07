@@ -8,23 +8,20 @@ describe 'typeclasses', ->
 
     outerType = newtype:
       name: 'OuterType'
-      fields: [
+      fields:
         inner: 'InnerTypeclass'
-      ]
 
     innerTypeA = newtype:
       name: 'InnerTypeA'
       typeclasses: ['InnerTypeclass']
-      fields: [
+      fields:
         str: 'String'
-      ]
 
     innerTypeB = newtype:
       name: 'InnerTypeB'
       typeclasses: ['InnerTypeclass']
-      fields: [
+      fields:
         int: 'Integer'
-      ]
 
     innerTypeclass = newtypeclass:
       name: 'InnerTypeclass'
@@ -39,8 +36,6 @@ describe 'typeclasses', ->
     recognize = recognizer.init system
 
     matchedA = recognize 'OuterType', inner: {str: 'foo'}
-
-    console.log "matchedA: #{inspect matchedA, {depth: null}}"
 
     matchedA.matched.should.eql true
     matchedA.data.should.eql inner: {str: 'foo'}
@@ -65,22 +60,21 @@ describe 'typeclasses', ->
     recognize('OuterType', inner: {foo: 'foo'}).matched.should.eql false
     recognize('OuterType', inner: {int: {}}).matched.should.eql false
 
+describe.skip 'requires typeclass graph ir', ->
   it 'should mix in fields', ->
 
     memberType =
       newtype:
         name: "MemberType"
         typeclasses: ["TypeclassWithField"]
-        fields: [
+        fields:
           ownField: "Int"
-        ]
 
     typeclass =
       newtypeclass:
         name: "TypeclassWithField"
-        fields: [
+        fields:
           classField: "String"
-        ]
 
     system = typeSystem.init()
     system.register memberType

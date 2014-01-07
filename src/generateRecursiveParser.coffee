@@ -31,29 +31,20 @@ parseFields = (parsers, typeDeclaration) ->
         type: typeDeclaration.name
         fields: {}
 
-    console.log "dataToParse: #{inspect dataToParse}"
-
-    for fieldDeclaration in typeDeclaration.fields
-      [fieldName, fieldType] = getNameAndTypeFromFieldObject fieldDeclaration
-      console.log "fieldName: #{fieldName}"
-      console.log "fieldType: #{fieldType}"
+    #this shouldn't use typeDeclaration.fields
+    #the fields should be loaded lazily and mix in typeclasses
+    for fieldName, fieldType of typeDeclaration.fields
       fieldExists = dataToParse[fieldName]?
-      console.log "fieldExists: #{fieldExists}"
       return matched: false unless fieldExists
 
       if isNativeType fieldType
-        console.log "native type"
         ir = parsers[fieldType] dataToParse[fieldName]
       else
-        console.log "non-native type"
         ir = parseNested parsers, fieldType, dataToParse[fieldName]
-
-      console.log "ir in parseFields: #{inspect ir}"
 
       return matched: false unless ir.matched
       packIR result, fieldName, ir
 
-    console.log "after packing: #{inspect result}"
     return result
 
 makeTypeclassParser = (parsers, typeclassMembers) ->
