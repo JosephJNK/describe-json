@@ -1,7 +1,7 @@
 resolve = require '../src/resolveTypeGraph'
 typeSystem = require '../src/typeSystem'
 
-describe.skip 'resolveTypeGraph', ->
+describe 'resolveTypeGraph', ->
 
   it 'should handle inherited fields', ->
 
@@ -9,16 +9,21 @@ describe.skip 'resolveTypeGraph', ->
       newtype:
         name: 'MemberType'
         typeclasses: ['TypeclassWithField']
-        fields: [
+        fields:
           ownField: 'Int'
-        ]
 
     typeclassWithField =
       newtypeclass:
         name: 'TypeclassWithField'
-        fields: [
+        extends: 'ParentTypeclass'
+        fields:
           classField: 'String'
-        ]
+
+    parentTypeclass =
+      newtypeclass:
+        name: 'ParentTypeclass'
+        fields:
+          parentField: 'Number'
 
     system = typeSystem.init()
     system.register memberType
@@ -30,8 +35,10 @@ describe.skip 'resolveTypeGraph', ->
       'MemberType':
         ownField: 'Int'
         classField: 'String'
+        parentField: 'Number'
     }
 
     resolvedForms.typeclassmembers.should.eql {
       'TypeclassWithField': [ 'MemberType' ]
+      'ParentTypeclass': [ 'MemberType' ]
     }
