@@ -18,10 +18,14 @@ findTypeclassParents = (inheritanceTree) ->
   parentLists
 
 dfs = (typeclasses, current, visited) ->
-  parentTypes = typeclasses[current].extends
-  return [null, {}] unless parentTypes
+  currentTypeclassData = typeclasses[current]
+  return [null, {}] unless currentTypeclassData?
+  parentTypes = currentTypeclassData.extends
+  return [null, {}] unless parentTypes?
 
   elements = {}
+
+  console.log "!!! parentTypes: #{inspect parentTypes}"
 
   for parent in parentTypes
     return ['Cycle exists', null] unless visited.indexOf parent is -1
@@ -34,21 +38,25 @@ dfs = (typeclasses, current, visited) ->
 
 createInheritanceTree = (typeclasses) ->
   resolved = {}
+  console.log "!!! typeclassess: #{inspect typeclasses}"
   for typeclassName, typeclassDefinition of typeclasses
     [error, typeclassTree] = dfs typeclasses, typeclassName, [typeclassName]
     return [error, null] if error
     resolved[typeclassName] = typeclassTree
+  console.log 'got through createInheritanceTree'
   return [null, resolved]
 
 getTypeclassFields = (typeclassName, typeclasses) ->
   typeclasses[typeclassName].fields
 
 reduceInheritanceTrees = (inheritanceTree, typeclasses) ->
+  console.log "inheritanceTree: #{inheritanceTree}"
   resolvedInterfaces = {}
   for typeName, typeParentTree of inheritanceTree
     [err, resolved] = getFieldsFromInheritanceTree typeName, typeParentTree, typeclasses
     return [err, null] if err
     resolvedInterfaces[typeName] = resolved
+  console.log "got through resolveinheritancetree"
   return [null, resolvedInterfaces]
 
 getFieldsFromInheritanceTree = (typeclassName, inheritanceTree, typeclasses) ->
@@ -96,6 +104,8 @@ addTypeToTypeclass = (typeName, typeclassName, registry, typeclassParentLists) -
       registry[typeclass].push typeName if registry[typeclassName].indexOf typeName is -1
 
 module.exports = (types, typeclasses) ->
+  console.log "types: #{inspect types}"
+  console.log "typeclasses: #{inspect typeclasses}"
 
   resolvedTypes = {}
   resolvedTypeclasses = {}
@@ -108,12 +118,14 @@ module.exports = (types, typeclasses) ->
     resolvedTypes[typeName] = typeData.fields
 
     console.log "typeData: #{inspect typeData}"
-    for typeclassName in typeData.typeclasses
+    if typeData.typeclasses
+      for typeclassName in typeData.typeclasses
 
-      addTypeToTypeclass typeName, typeclassName, resolvedTypeclasses, typeclassParentLists
+        addTypeToTypeclass typeName, typeclassName, resolvedTypeclasses, typeclassParentLists
 
-      for fieldName, fieldType of resolvedTypeclassFields[typeclassName]
-        resolvedTypes[typeName][fieldName] = fieldType
+        if resolvedTypeclassFields[typeclassName]
+          for fieldName, fieldType of resolvedTypeclassFields[typeclassName]
+            resolvedTypes[typeName][fieldName] = fieldType
 
   return [null, {
     typefields: resolvedTypes

@@ -60,7 +60,6 @@ describe 'typeclasses', ->
     recognize('OuterType', inner: {foo: 'foo'}).matched.should.eql false
     recognize('OuterType', inner: {int: {}}).matched.should.eql false
 
-describe 'requires typeclass graph ir', ->
   it 'should mix in fields', ->
 
     memberType =
