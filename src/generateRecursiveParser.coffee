@@ -18,7 +18,6 @@ parseNested = (parsers, fieldType, dataToParse) ->
 packIR = (packedObj, fieldName, ir) ->
   packedObj.data[fieldName] = ir.data
   packedObj.typedata.fields[fieldName] = ir.typedata
-  console.log "in packIR: #{inspect packedObj, depth: null}"
 
 parseFields = (parsers, typeDeclaration) ->
   (dataToParse) ->
@@ -49,14 +48,12 @@ parseFields = (parsers, typeDeclaration) ->
 
 makeTypeclassParser = (parsers, typeclassMembers) ->
   (dataToParse) ->
-    console.log "typeclassMembers: #{typeclassMembers}"
     for type in typeclassMembers
       ir = parsers[type] dataToParse
       return ir if ir.matched
     return matched: false
 
 generateParser = (declarationType, newType, parsers, typeclassMembers) ->
-  console.log "typeclassMembers: #{inspect typeclassMembers, depth: null}"
   if declarationType is 'type'
     if newType.fields?
       fieldsParser = parseFields parsers, newType

@@ -10,11 +10,9 @@ resolveTypeclassFields = (typeclasses) ->
   return [null, resolvedFields, parentLists]
 
 findTypeclassParents = (inheritanceTree) ->
-  console.log "inheritanceTree: #{inspect inheritanceTree}"
   parentLists = {}
   for typeName, typeTree of inheritanceTree
     parentLists[typeName] = utilities.getAllNonemptyNodesInTree typeTree
-  console.log "parentLists: #{inspect parentLists}"
   parentLists
 
 dfs = (typeclasses, current, visited) ->
@@ -24,8 +22,6 @@ dfs = (typeclasses, current, visited) ->
   return [null, {}] unless parentTypes?
 
   elements = {}
-
-  console.log "!!! parentTypes: #{inspect parentTypes}"
 
   for parent in parentTypes
     return ['Cycle exists', null] unless visited.indexOf parent is -1
@@ -38,25 +34,21 @@ dfs = (typeclasses, current, visited) ->
 
 createInheritanceTree = (typeclasses) ->
   resolved = {}
-  console.log "!!! typeclassess: #{inspect typeclasses}"
   for typeclassName, typeclassDefinition of typeclasses
     [error, typeclassTree] = dfs typeclasses, typeclassName, [typeclassName]
     return [error, null] if error
     resolved[typeclassName] = typeclassTree
-  console.log 'got through createInheritanceTree'
   return [null, resolved]
 
 getTypeclassFields = (typeclassName, typeclasses) ->
   typeclasses[typeclassName].fields
 
 reduceInheritanceTrees = (inheritanceTree, typeclasses) ->
-  console.log "inheritanceTree: #{inheritanceTree}"
   resolvedInterfaces = {}
   for typeName, typeParentTree of inheritanceTree
     [err, resolved] = getFieldsFromInheritanceTree typeName, typeParentTree, typeclasses
     return [err, null] if err
     resolvedInterfaces[typeName] = resolved
-  console.log "got through resolveinheritancetree"
   return [null, resolvedInterfaces]
 
 getFieldsFromInheritanceTree = (typeclassName, inheritanceTree, typeclasses) ->
@@ -95,7 +87,6 @@ mergeFieldsWithParent = (typeclassName, childFields, parentFields) ->
   [null, merged]
 
 addTypeToTypeclass = (typeName, typeclassName, registry, typeclassParentLists) ->
-  console.log "typeclassParentLists: #{inspect typeclassParentLists}"
   registry[typeclassName] = [] unless registry[typeclassName]?
   registry[typeclassName].push typeName if registry[typeclassName].indexOf typeName is -1
   if typeclassParentLists[typeclassName]?
@@ -104,20 +95,15 @@ addTypeToTypeclass = (typeName, typeclassName, registry, typeclassParentLists) -
       registry[typeclass].push typeName if registry[typeclassName].indexOf typeName is -1
 
 module.exports = (types, typeclasses) ->
-  console.log "types: #{inspect types}"
-  console.log "typeclasses: #{inspect typeclasses}"
-
   resolvedTypes = {}
   resolvedTypeclasses = {}
 
   [err, resolvedTypeclassFields, typeclassParentLists] = resolveTypeclassFields typeclasses
-  console.log err if err
   return [err, null] if err
 
   for typeName, typeData of types
     resolvedTypes[typeName] = typeData.fields
 
-    console.log "typeData: #{inspect typeData}"
     if typeData.typeclasses
       for typeclassName in typeData.typeclasses
 

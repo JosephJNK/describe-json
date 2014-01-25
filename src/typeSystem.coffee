@@ -54,15 +54,12 @@ module.exports =
         return 'newtype or newtypeclass keywords must be used'
 
       init: ->
-        console.log 'woooooooooooooo'
         [err, {typefields, typeclassmembers}] = resolveTypeGraph registeredTypes, registeredTypeclasses
         return err if err
-        console.log "wheeeeeeeee"
         for typeclassName, typeclassData of registeredTypeclasses
           recognizers[typeclassName] = generateRecursiveParser 'typeclass', typeclassData, recognizers, typeclassMembers
         for typeName, typeData of registeredTypes
           recognizers[typeName] = generateRecursiveParser 'type', typeData, recognizers, typeclassMembers
-        console.log 'yaaaaaaaaaaaaaaaaay'
 
       types: registeredTypes
       typeclasses: registeredTypeclasses

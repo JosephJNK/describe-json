@@ -36,16 +36,12 @@ describe 'resolveTypeGraph', ->
 
     {inspect} = require 'util'
 
-    console.log inspect resolvedForms, depth: null
-
     resolvedForms.typefields.should.eql {
       'MemberType':
         ownField: 'Int'
         classField: 'String'
         parentField: 'Number'
     }
-
-    console.log inspect resolvedForms.typeclassmembers, depth: null
 
     resolvedForms.typeclassmembers.should.eql {
       'TypeclassWithField': [ 'MemberType' ]
