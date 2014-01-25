@@ -67,7 +67,7 @@ describe 'typeclasses', ->
         name: "MemberType"
         typeclasses: ["TypeclassWithField"]
         fields:
-          ownField: "Int"
+          ownField: "Integer"
 
     typeclass =
       newtypeclass:
@@ -86,7 +86,7 @@ describe 'typeclasses', ->
     matched.data.should.eql {ownField: 0, classField: 'foo'}
     matched.typedata.type.should.eql 'MemberType'
     matched.typedata.iscontainer.should.eql true
-    matched.typedata.fields.ownField.type.should.eql 'Int'
+    matched.typedata.fields.ownField.type.should.eql 'Integer'
     matched.typedata.fields.ownField.iscontainer.should.eql false
     matched.typedata.fields.classField.type.should.eql 'String'
     matched.typedata.fields.classField.iscontainer.should.eql false
