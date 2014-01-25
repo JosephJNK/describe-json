@@ -1,90 +1,116 @@
 {inspect} = require 'util'
+utilities = require './utilities'
 
 resolveTypeclassFields = (typeclasses) ->
-  [err, inheritanceTree] = walkInheritanceTree typeclasses
-  return [err, null] if err
-  [err, resolvedFields] = reduceInheritanceTree inheritanceTree, typeclasses
-  return [err, resolvedFields]
+  [err, inheritanceTree] = createInheritanceTree typeclasses
+  return [err, null, null] if err
+  [err, resolvedFields] = reduceInheritanceTrees inheritanceTree, typeclasses
+  return [err, null, null] if err
+  parentLists = findTypeclassParents inheritanceTree
+  return [null, resolvedFields, parentLists]
+
+findTypeclassParents = (inheritanceTree) ->
+  console.log "inheritanceTree: #{inspect inheritanceTree}"
+  parentLists = {}
+  for typeName, typeTree of inheritanceTree
+    parentLists[typeName] = utilities.getAllNonemptyNodesInTree typeTree
+  console.log "parentLists: #{inspect parentLists}"
+  parentLists
 
 dfs = (typeclasses, current, visited) ->
-  for parent in typeclasses[current].extends
-    return ['Cycle exists', null] unless visited.indexOf typeclass is -1
+  parentTypes = typeclasses[current].extends
+  return [null, {}] unless parentTypes
+
+  elements = {}
+
+  for parent in parentTypes
+    return ['Cycle exists', null] unless visited.indexOf parent is -1
     newVisited = visited.concat parent
-    return [null, dfs typeclasses, parent, newVisited]
+    [err, parentTree] = dfs typeclasses, parent, newVisited
+    return [err, null] if err
+    elements[parent] = parentTree
 
-walkInheritanceTree = (typeclasses) ->
+  [null, elements]
+
+createInheritanceTree = (typeclasses) ->
   resolved = {}
-  for typeclass of typeclasses
-    [error, typeclassTree] = dfs typeclasses, typeclass, [typeclass]
-    return error if error
-    resolved[typeclass] = typeclassTree
-  return resolved
-
-#run each tree independently, higher elements in inheritance chain at leaves
-#if there's a cycle, it will occur in at least one root -> leaf path
+  for typeclassName, typeclassDefinition of typeclasses
+    [error, typeclassTree] = dfs typeclasses, typeclassName, [typeclassName]
+    return [error, null] if error
+    resolved[typeclassName] = typeclassTree
+  return [null, resolved]
 
 getTypeclassFields = (typeclassName, typeclasses) ->
   typeclasses[typeclassName].fields
 
-reduceInheritanceTree = (inheritanceTree, typeclasses) ->
+reduceInheritanceTrees = (inheritanceTree, typeclasses) ->
   resolvedInterfaces = {}
-  for typeName, typeTree of inheritanceTree
-    [err, resolved] = reduceParentTree {typeName: typeTree}
+  for typeName, typeParentTree of inheritanceTree
+    [err, resolved] = getFieldsFromInheritanceTree typeName, typeParentTree, typeclasses
     return [err, null] if err
     resolvedInterfaces[typeName] = resolved
   return [null, resolvedInterfaces]
 
-reduceParentTree = (parentTree, typeclasses) ->
-  currentTypeclass = Object.keys(parentTree)[0]
+getFieldsFromInheritanceTree = (typeclassName, inheritanceTree, typeclasses) ->
+  myTypeclassFields = getTypeclassFields typeclassName, typeclasses
+  return [null, myTypeclassFields] if inheritanceTree is {}
 
-  return getTypeclassFields currentTypeclass, typeclasses if parentTree[currentTypeclass] is {}
+  flattenedSiblingTrees = {}
 
-  flattenedTrees = {}
-
-  for siblingName, siblingTree of parentTree[currentTypeclass]
-    reduced = reduceParentTree {siblingName: siblingTree}
-    [err, mergedWithParent]= mergeParent currentTypeclass, reduced, typeclasses
+  for siblingName, siblingInheritanceTree of inheritanceTree
+    [err, siblingFields] = getFieldsFromInheritanceTree siblingName, siblingInheritanceTree, typeclasses
     return [err, null] if err
-    flattenedTrees[siblingName] = mergedWithParent
+    flattenedSiblingTrees[siblingName] = siblingFields
 
-  [err, merged] = mergeSiblings flattenedTrees, currentTypeclass, typeclasses
-  return [err, merged]
+  [err, mergedSiblingFields] = mergeSiblingFields flattenedSiblingTrees, typeclassName, typeclasses
 
-mergeSiblings = (siblingTrees, typeclassName, typeclasses) ->
+  [err, mergedFields] = mergeFieldsWithParent typeclassName, myTypeclassFields, mergedSiblingFields
+
+  return [err, mergedFields]
+
+mergeSiblingFields = (siblingFieldsObject) ->
   merged = {}
-  for typeclassName, fields of siblingTrees
+  for typeclassName, fields of siblingFieldsObject
     for fieldName, fieldType of fields
       if merged[fieldName]?
         return ["Error: When resolving fields of #{typeclass}, multiple inherited types define #{fieldName}", null]
       merged[fieldName] = fieldType
   [null, merged]
 
-mergeParent = (typeclass, parentFields, typeclasses) ->
-  merged = getTypeclassFields typeclass, typeclasses
+mergeFieldsWithParent = (typeclassName, childFields, parentFields) ->
+  merged = utilities.cloneFlatObject childFields
+
   for fieldName, fieldType of parentFields
     if merged[fieldName]?
-      return ["Error: typeclass #{typeclass} conflicts with parent's field #{fieldName}", null]
+      return ["Error: typeclass #{typeclassName} conflicts with parent's field #{fieldName}", null]
     merged[fieldName] = fieldType
   [null, merged]
 
-addTypeToTypeclass = (typeName, typeclassName, registry) ->
+addTypeToTypeclass = (typeName, typeclassName, registry, typeclassParentLists) ->
+  console.log "typeclassParentLists: #{inspect typeclassParentLists}"
   registry[typeclassName] = [] unless registry[typeclassName]?
-  registry[typeclassName].push typeName
+  registry[typeclassName].push typeName if registry[typeclassName].indexOf typeName is -1
+  if typeclassParentLists[typeclassName]?
+    for typeclass in typeclassParentLists[typeclassName]
+      registry[typeclass] = [] unless registry[typeclass]?
+      registry[typeclass].push typeName if registry[typeclassName].indexOf typeName is -1
 
 module.exports = (types, typeclasses) ->
 
   resolvedTypes = {}
   resolvedTypeclasses = {}
 
-  [err, resolvedTypeclassFields] = resolveTypeclassFields typeclasses
+  [err, resolvedTypeclassFields, typeclassParentLists] = resolveTypeclassFields typeclasses
+  console.log err if err
   return [err, null] if err
 
   for typeName, typeData of types
     resolvedTypes[typeName] = typeData.fields
 
+    console.log "typeData: #{inspect typeData}"
     for typeclassName in typeData.typeclasses
 
-      addTypeToTypeclass typeName, typeclassName, resolvedTypeclasses
+      addTypeToTypeclass typeName, typeclassName, resolvedTypeclasses, typeclassParentLists
 
       for fieldName, fieldType of resolvedTypeclassFields[typeclassName]
         resolvedTypes[typeName][fieldName] = fieldType

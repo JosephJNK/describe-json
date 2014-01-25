@@ -1,5 +1,6 @@
 resolve = require '../src/resolveTypeGraph'
 typeSystem = require '../src/typeSystem'
+should = require 'should'
 
 describe 'resolveTypeGraph', ->
 
@@ -15,7 +16,7 @@ describe 'resolveTypeGraph', ->
     typeclassWithField =
       newtypeclass:
         name: 'TypeclassWithField'
-        extends: 'ParentTypeclass'
+        extends: ['ParentTypeclass']
         fields:
           classField: 'String'
 
@@ -28,8 +29,14 @@ describe 'resolveTypeGraph', ->
     system = typeSystem.init()
     system.register memberType
     system.register typeclassWithField
+    system.register parentTypeclass
 
-    resolvedForms = resolve system.types, system.typeclasses
+    [err, resolvedForms] = resolve system.types, system.typeclasses
+    should.not.exist err
+
+    {inspect} = require 'util'
+
+    console.log inspect resolvedForms, depth: null
 
     resolvedForms.typefields.should.eql {
       'MemberType':
@@ -37,6 +44,8 @@ describe 'resolveTypeGraph', ->
         classField: 'String'
         parentField: 'Number'
     }
+
+    console.log inspect resolvedForms.typeclassmembers, depth: null
 
     resolvedForms.typeclassmembers.should.eql {
       'TypeclassWithField': [ 'MemberType' ]
