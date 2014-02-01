@@ -1,14 +1,17 @@
 generateRecursiveParser = require './generateRecursiveParser'
 resolveTypeGraph = require './resolveTypeGraph'
+nativeTypeRecognizers = require './nativeTypeRecognizers'
+
+{ addItemToLabelledCollection, createLabelForType, createLabelForTypeclass, createLabelForNativeType } = require './typeResolver'
 
 module.exports =
   init: ->
     registeredTypes = {}
     registeredTypeclasses = {}
 
-    typeclassMembers = {}
+    recognizers = {}
 
-    recognizers = require './nativeTypeRecognizers'
+    typeclassMembers = {}
 
     validateNewType = (newtype) ->
       return 'Type must have a name' unless newtype.name?
@@ -54,12 +57,21 @@ module.exports =
         return 'newtype or newtypeclass keywords must be used'
 
       init: ->
+
+        for nativeTypeName, parser of nativeTypeRecognizers
+          label = createLabelForNativeType nativeTypeName
+          addItemToLabelledCollection label, parser, recognizers
+
         [err, {typefields, typeclassmembers}] = resolveTypeGraph registeredTypes, registeredTypeclasses
         return err if err
         for typeclassName, typeclassData of registeredTypeclasses
-          recognizers[typeclassName] = generateRecursiveParser 'typeclass', typeclassData, recognizers, typeclassMembers
+          typeclassLabel = createLabelForTypeclass typeclassName, typeclassData
+          typeclassParser = generateRecursiveParser 'typeclass', typeclassData, recognizers, typeclassMembers, registeredTypes
+          addItemToLabelledCollection typeclassLabel, typeclassParser, recognizers
         for typeName, typeData of registeredTypes
-          recognizers[typeName] = generateRecursiveParser 'type', typeData, recognizers, typeclassMembers
+          typeLabel = createLabelForType typeName, typeData
+          typeParser = generateRecursiveParser 'type', typeData, recognizers, typeclassMembers, registeredTypes
+          addItemToLabelledCollection typeLabel, typeParser, recognizers
 
       types: registeredTypes
       typeclasses: registeredTypeclasses

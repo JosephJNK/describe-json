@@ -10,7 +10,7 @@ describe 'recognizer', ->
       try
         recognize 'Invalid', {}
       catch e
-        e.should.eql "Error: 'Invalid' is not a registered type"
+        e.should.eql "Error: 'Invalid' could not be resolved to a type"
 
 
   describe 'basic types', ->

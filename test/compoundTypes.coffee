@@ -12,7 +12,8 @@ describe 'recognizer', ->
         fields:
           aField: 'Integer'
 
-      system.register type
+      err = system.register type
+      console.log err if err
 
       recognize = recognizer.init system
 

@@ -1,25 +1,35 @@
-{inspect} = require 'util'
+
+{createLabelForField, getParserForType, createLabelForType} = require './typeResolver'
 
 nativeTypes = Object.keys require './nativeTypeRecognizers'
 
-isNativeType = (typeName) -> nativeTypes.indexOf typeName isnt -1
+isNativeType = (type) -> nativeTypes.indexOf type.name isnt -1
 
-getOnlyKeyForObject = (x) -> Object.keys(x)[0] #add validation that there is only one here to registration
+isTypeParameter = (type, typeParameters) -> typeParameters.indexOf type.name isnt -1
+
+getOnlyKeyForObject = (x) -> Object.keys(x)[0]
+
+resolveTypeParameter = (parameterName, typeParameters) -> typeParameters[parameterName]
 
 getNameAndTypeFromFieldObject = (x) ->
   fieldName = getOnlyKeyForObject x
   fieldType = x[fieldName]
   [fieldName, fieldType]
 
-parseNested = (parsers, fieldType, dataToParse) ->
-  nestedParser = parseFields parsers, parsers[fieldType].fields
+parseNested = (parsers, fieldLabels, dataToParse) ->
+  [err, parser] = getParserForType fieldLabels, parsers
+  throw err if err
+  nestedParser = parseFields parsers, parser.fields
   nestedParser dataToParse
 
 packIR = (packedObj, fieldName, ir) ->
   packedObj.data[fieldName] = ir.data
   packedObj.typedata.fields[fieldName] = ir.typedata
 
-parseFields = (parsers, typeDeclaration) ->
+recordUseOfUnresolvedType = (typeLabel) ->
+  throw 'Attempted to parse an unresolved type'
+
+parseFields = (parsers, typeDeclaration, typeParameters) ->
   (dataToParse) ->
 
     result =
@@ -30,36 +40,43 @@ parseFields = (parsers, typeDeclaration) ->
         type: typeDeclaration.name
         fields: {}
 
-    #this shouldn't use typeDeclaration.fields
-    #the fields should be loaded lazily and mix in typeclasses
-    for fieldName, fieldType of typeDeclaration.fields
+    for fieldName, fieldData of typeDeclaration.fields
       fieldExists = dataToParse[fieldName]?
       return matched: false unless fieldExists
 
-      if isNativeType fieldType
-        ir = parsers[fieldType] dataToParse[fieldName]
+      typeLabel = createLabelForField fieldData, typeParameters
+      return recordUseOfUnresolvedType typeLabel unless typeLabel.basetypeisresolved
+
+      if isNativeType typeLabel
+        [err, parser] = getParserForType typeLabel, parsers
+        throw err if err?
+        ir = parser dataToParse[fieldName]
       else
-        ir = parseNested parsers, fieldType, dataToParse[fieldName]
+        ir = parseNested parsers, fieldLabel, dataToParse[fieldName]
 
       return matched: false unless ir.matched
       packIR result, fieldName, ir
 
     return result
 
-makeTypeclassParser = (parsers, typeclassMembers) ->
+makeTypeclassParser = (parsers, typeclassMembers, types) ->
   (dataToParse) ->
-    for type in typeclassMembers
-      ir = parsers[type] dataToParse
+    for typeName in typeclassMembers
+      type = types[typeName]
+      typeLabel = createLabelForType typeName, type
+      [err, parser] = getParserForType typeLabel, parsers
+      throw err if err
+      ir = parser dataToParse
       return ir if ir.matched
     return matched: false
 
-generateParser = (declarationType, newType, parsers, typeclassMembers) ->
+generateParser = (declarationType, newType, parsers, typeclassMembers, types) ->
   if declarationType is 'type'
     if newType.fields?
-      fieldsParser = parseFields parsers, newType
+      fieldsParser = parseFields parsers, newType, {}
       return fieldsParser
 
   if declarationType is 'typeclass'
-    return makeTypeclassParser parsers, typeclassMembers[newType.name]
+    return makeTypeclassParser parsers, typeclassMembers[newType.name], types
 
 module.exports = generateParser

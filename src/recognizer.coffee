@@ -1,9 +1,13 @@
-{inspect} = require 'util'
+{getFromCollectionByLabel, createLabelForPattern} = require './typeResolver'
+
 module.exports =
   init: (system) ->
-    system.init()
-    (type, data) ->
-      if system.recognizers[type]?
-        system.recognizers[type] data
+    system.init() #TODO get rid of this, it's super inefficient
+
+    (pattern, data) ->
+      label = createLabelForPattern pattern
+      [err, parser] = getFromCollectionByLabel label, system.recognizers
+      if err?
+        throw "Error: '#{pattern}' could not be resolved to a type"
       else
-        throw "Error: '#{type}' is not a registered type"
+        parser data

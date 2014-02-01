@@ -33,6 +33,8 @@ describe 'typeclasses', ->
     system.register innerTypeB
     system.register innerTypeclass
 
+    system.init()
+
     recognize = recognizer.init system
 
     matchedA = recognize 'OuterType', inner: {str: 'foo'}
