@@ -1,5 +1,5 @@
 
-{getOnlyValueForObject, beginsWithUpperCase, isString} = require './utilities'
+{getOnlyValueForObject, getOnlyKeyForObject, beginsWithUpperCase, isString} = require './utilities'
 
 module.exports =
 
@@ -28,7 +28,24 @@ module.exports =
     freeParameters = []
     boundParameters = {}
 
-    return [freeParameters, boundParameters] if isString fieldTypeData
+    if isString fieldTypeData
+      unless beginsWithUpperCase fieldTypeData
+
+        if parameterArguments[fieldTypeData]?
+          boundParameters[fieldTypeData] = parameterArguments[fieldTypeData]
+        else
+          freeParameters.push fieldTypeData
+
+      return [freeParameters, boundParameters] 
+
+    paramType = getOnlyKeyForObject fieldTypeData
+
+    unless beginsWithUpperCase paramType
+      if parameterArguments[paramType]?
+        boundParameters[paramType] = parameterArguments[paramType]
+      else
+        freeParameters.push paramType
+
 
     for paramName, paramArgument of getOnlyValueForObject fieldTypeData
 

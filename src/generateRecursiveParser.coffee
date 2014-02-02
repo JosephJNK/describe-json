@@ -48,13 +48,11 @@ parseFields = (parsers, typeDeclaration, typeParameters) ->
 
       [err, thisFieldsParams] = selectParametersForField fieldData, typeParameters
 
-      typeLabel = createLabelForField fieldData, thisFieldsParams
+      fieldObj = {}
+      fieldObj[fieldName] = fieldData
+      typeLabel = createLabelForField fieldObj, thisFieldsParams
 
       return recordUseOfUnresolvedType typeLabel unless typeLabel.basetypeisresolved
-
-
-      console.log "thisFieldsParams: #{inspect thisFieldsParams, depth:null}"
-      console.log "TypeLabel: #{inspect typeLabel, depth:null}"
 
       if isNativeType typeLabel
         [err, parser] = getParserForType typeLabel, parsers
@@ -62,6 +60,7 @@ parseFields = (parsers, typeDeclaration, typeParameters) ->
         ir = parser dataToParse[fieldName]
       else
         ir = parseNested parsers, fieldLabel, dataToParse[fieldName], thisFieldsParams
+
 
       return matched: false unless ir.matched
       packIR result, fieldName, ir

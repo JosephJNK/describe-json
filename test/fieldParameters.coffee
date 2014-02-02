@@ -81,7 +81,29 @@ describe 'Field parameter resolution', ->
       boundParameters.staticParam.should.eql 'String'
 
 
-    it 'should handle taking a parameter name string as input', ->
+    it 'should be able to handle parameterized types', ->
+
+      parameterizedField =
+        'paramType':
+          fieldParameter: 'paramArg'
+          staticParam: 'String'
+          unresolved: 'unknown'
+
+      params =
+        paramType: 'SomeType'
+        paramArg: 'Number'
+        irrelevant: 'Integer'
+
+      [freeParameters, boundParameters] = applyTypeParametersForField parameterizedField, params
+
+      freeParameters.should.includeEql 'unresolved'
+
+      boundParameters.paramType.should.eql 'SomeType'
+      boundParameters.staticParam.should.eql 'String'
+      boundParameters.fieldParameter.should.eql 'Number'
+
+
+    it 'should handle taking a static type string as input', ->
 
       fieldData = 'String'
 
@@ -94,14 +116,29 @@ describe 'Field parameter resolution', ->
       freeParameters.should.eql []
       boundParameters.should.eql {}
 
-      fieldData2 = 'param'
+    it 'should handle taking a parameter name string as input', ->
+
+      fieldData = 'paramArg'
 
       params =
         paramArg: 'Number'
         irrelevant: 'Integer'
 
-      [freeParameters2, boundParameters2] = applyTypeParametersForField fieldData2, params
+      [freeParameters, boundParameters] = applyTypeParametersForField fieldData, params
 
-      freeParameters2.should.eql []
-      boundParameters2.should.eql {}
+      freeParameters.should.eql []
+      boundParameters.should.eql paramArg: 'Number'
+
+
+    it 'should handle taking an unresolvable parameter name string as input', ->
+
+      fieldData = 'paramArg'
+
+      params =
+        irrelevant: 'Integer'
+
+      [freeParameters, boundParameters] = applyTypeParametersForField fieldData, params
+
+      freeParameters.should.eql ['paramArg']
+      boundParameters.should.eql {}
 

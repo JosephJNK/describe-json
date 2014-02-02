@@ -62,3 +62,83 @@ describe 'Type Resolver', ->
     [err, res] = typeResolver.getFromCollectionByLabel typeclassLabel, collection
     should.not.exist err
     res.should.eql typeclassName
+
+
+  it 'should be able to label a field with a parametric type', ->
+
+    parameterizedField = parameterized: 'fieldParameter'
+    typeParameters = fieldParameter: 'Number', irrelevant: 'String'
+    resolvedLabel = typeResolver.createLabelForField parameterizedField, typeParameters
+    resolvedLabel.name.should.eql 'Number'
+    resolvedLabel.isparameterized.should.eql true
+    resolvedLabel.basetypeisresolved.should.eql true
+    resolvedLabel.freeparameters.should.eql []
+    resolvedLabel.boundparameters.should.eql {}
+
+
+  it 'should be able to label a nonparameterized field', ->
+
+    nonParameterizedField = nonparameterized: 'String'
+    typeParameters = fieldParameter: 'Number', irrelevant: 'String'
+
+    resolvedLabel = typeResolver.createLabelForField nonParameterizedField, typeParameters
+    resolvedLabel.name.should.eql 'String'
+    resolvedLabel.isparameterized.should.eql false
+    resolvedLabel.basetypeisresolved.should.eql true
+    resolvedLabel.freeparameters.should.eql []
+    resolvedLabel.boundparameters.should.eql {}
+
+
+  it 'should be able to label a field which takes a type parameter', ->
+
+    typeParameters = fieldParameter: 'Number', irrelevant: 'String'
+
+    typedParameterizedField =
+      parameterized:
+        'ParameterizedType':
+          innerParameter: 'fieldParameter'
+          unresolvedParameter: 'unresolved'
+
+    resolvedLabel = typeResolver.createLabelForField typedParameterizedField, typeParameters
+    resolvedLabel.name.should.eql 'ParameterizedType'
+    resolvedLabel.isparameterized.should.eql true
+    resolvedLabel.basetypeisresolved.should.eql true
+    resolvedLabel.freeparameters.should.eql ['unresolvedParameter']
+    resolvedLabel.boundparameters.should.eql innerParameter: 'Number'
+
+
+  it 'should be able to label a parameterized field which takes type parameters', ->
+
+    reallyParameterizedField =
+      parameterized:
+        'parameterizedType':
+          innerParameter: 'fieldParameter'
+          unresolvedParameter: 'unresolved'
+
+    typeParameters = parameterizedType: 'SomeType', fieldParameter: 'Number', irrelevant: 'String'
+    resolvedLabel = typeResolver.createLabelForField reallyParameterizedField, typeParameters
+    resolvedLabel.name.should.eql 'SomeType'
+    resolvedLabel.isparameterized.should.eql true
+    resolvedLabel.basetypeisresolved.should.eql true
+    resolvedLabel.freeparameters.should.eql ['unresolvedParameter']
+    resolvedLabel.boundparameters.innerParameter.should.eql 'Number'
+    resolvedLabel.boundparameters.parameterizedType.should.eql 'SomeType'
+
+
+  it 'should be able to label an unresolved parameterized field which takes type parameters', ->
+
+    reallyParameterizedField =
+      parameterized:
+        'parameterizedType':
+          innerParameter: 'fieldParameter'
+          unresolvedParameter: 'unresolved'
+
+    typeParameters = fieldParameter: 'Number', irrelevant: 'String'
+
+    resolvedLabel = typeResolver.createLabelForField reallyParameterizedField, typeParameters
+
+    resolvedLabel.isparameterized.should.eql true
+    resolvedLabel.basetypeisresolved.should.eql false
+    resolvedLabel.freeparameters.should.includeEql 'unresolvedParameter'
+    resolvedLabel.freeparameters.should.includeEql 'parameterizedType'
+    resolvedLabel.boundparameters.should.eql innerParameter: 'Number'

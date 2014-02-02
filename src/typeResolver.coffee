@@ -1,42 +1,42 @@
 
-{getOnlyKeyForObject, beginsWithUpperCase, isString} = require './utilities'
+{getOnlyKeyForObject, getOnlyValueForObject, beginsWithUpperCase, isString} = require './utilities'
 {applyTypeParametersForField} = require './parameterUtilities'
 
-{inspect} = require 'util'
-
 createLabelForField = (typeData, typeParameters) ->
-  console.log "Making label for #{inspect typeData, depth:null} with params #{inspect typeParameters, {depth: null}}"
 
-  if isString typeData
-    isParameter = not beginsWithUpperCase typeData[0]
+  fieldData = getOnlyValueForObject typeData
+
+  if isString fieldData
+    isParameter = not beginsWithUpperCase fieldData[0]
     if isParameter
-      [freeParameters, boundParameters] = applyTypeParametersForField typeData, typeParameters
+      [freeParameters, boundParameters] = applyTypeParametersForField fieldData, typeParameters
       fullyResolved = freeParameters.length is 0
-      boundParamNames = Object.keys boundParameters
-      if boundParamNames.length isnt 0
-        console.log 'resolved parameterized type'
-        name: boundParamNames[0]
+      if Object.keys(boundParameters).length isnt 0
+        name: getOnlyValueForObject boundParameters
         isparameterized: true
         basetypeisresolved: true
-        freeparameters: freeParameters.sort()
-        boundparameters: boundParameters
+        freeparameters: []
+        boundparameters: {}
       else
-        console.log 'unresolved parameterized type'
         isparameterized: true
         basetypeisresolved: false
         freeparameters: freeParameters.sort()
         boundparameters: boundParameters
     else
-      console.log 'nonparameterized type'
-      name: typeData
+      name: fieldData
       isparameterized: false
       basetypeisresolved: true
+      freeparameters: []
+      boundparameters: {}
   else
-    typeName = getOnlyKeyForObject typeData
-    [freeParameters, boundParameters] = applyTypeParametersForField typeData[typeName], typeParameters
-    name: typeName
+    typeName = getOnlyKeyForObject fieldData
+    [freeParameters, boundParameters] = applyTypeParametersForField fieldData, typeParameters
+
+    resolvedName = if boundParameters[typeName]? then boundParameters[typeName] else typeName
+
+    name: resolvedName
     isparameterized: true
-    basetypeisresolved: true
+    basetypeisresolved: beginsWithUpperCase resolvedName
     freeparameters: freeParameters.sort()
     boundparameters: boundParameters
 
@@ -52,11 +52,15 @@ createLabelForNativeType = (typeName) ->
   name: typeName
   isparameterized: false
   basetypeisresolved: true
+  freeparameters: []
+  boundparameters: {}
 
 createLabelForPattern = (typeName) ->
   name: typeName
   isparameterized: false
   basetypeisresolved: true
+  freeparameters: []
+  boundparameters: {}
 
 getFromCollectionByLabel = (label, collection) ->
   return ['Cannot look up an item with an unresolved name', null] unless label?.name?
