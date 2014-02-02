@@ -81,7 +81,27 @@ describe 'Field parameter resolution', ->
       boundParameters.staticParam.should.eql 'String'
 
 
-  describe.skip '', ->
     it 'should handle taking a parameter name string as input', ->
 
+      fieldData = 'String'
+
+      params =
+        paramArg: 'Number'
+        irrelevant: 'Integer'
+
+      [freeParameters, boundParameters] = applyTypeParametersForField fieldData, params
+
+      freeParameters.should.eql []
+      boundParameters.should.eql {}
+
+      fieldData2 = 'param'
+
+      params =
+        paramArg: 'Number'
+        irrelevant: 'Integer'
+
+      [freeParameters2, boundParameters2] = applyTypeParametersForField fieldData2, params
+
+      freeParameters2.should.eql []
+      boundParameters2.should.eql {}
 

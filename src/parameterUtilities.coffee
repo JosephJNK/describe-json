@@ -28,9 +28,7 @@ module.exports =
     freeParameters = []
     boundParameters = {}
 
-    {inspect} = require 'util'
-
-    console.log inspect parameterArguments
+    return [freeParameters, boundParameters] if isString fieldTypeData
 
     for paramName, paramArgument of getOnlyValueForObject fieldTypeData
 
@@ -42,9 +40,4 @@ module.exports =
         else
           freeParameters.push paramName
 
-    console.log inspect freeParameters
-    console.log inspect boundParameters
-
     [freeParameters, boundParameters]
-
-
