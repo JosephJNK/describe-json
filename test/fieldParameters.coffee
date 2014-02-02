@@ -1,57 +1,87 @@
-selectParametersForField = require '../src/selectParametersForField'
+{selectParametersForField, applyTypeParametersForField} = require '../src/parameterUtilities'
 should = require 'should'
 
 describe 'Field parameter resolution', ->
 
-  it 'should be able to apply static parameters to a field', ->
+  describe 'selecting parameters', ->
 
-    parameterizedField =
-      'ParameterizedType':
-        fieldParameter: 'Number'
+    it 'should be able to apply static parameters to a field', ->
 
-    [err, res] = selectParametersForField parameterizedField, {}
+      parameterizedField =
+        'ParameterizedType':
+          fieldParameter: 'Number'
 
-    should.not.exist err
-    res.should.eql fieldParameter: 'Number'
+      [err, res] = selectParametersForField parameterizedField, {}
 
-  it 'should be able to apply containing type parameters to a parametrically typed field', ->
+      should.not.exist err
+      res.should.eql fieldParameter: 'Number'
 
-    parentParameters = fieldParameter: 'Number'
+    it 'should be able to apply containing type parameters to a parametrically typed field', ->
 
-    parameterizedField =
-      'ParameterizedType':
-        fieldParameter: 'fieldParameter'
+      parentParameters = fieldParameter: 'Number'
 
-    [err, res] = selectParametersForField parameterizedField, parentParameters
+      parameterizedField =
+        'ParameterizedType':
+          fieldParameter: 'fieldParameter'
 
-    should.not.exist err
-    res.should.eql fieldParameter: 'Number'
+      [err, res] = selectParametersForField parameterizedField, parentParameters
 
-  it 'should be able to handle static, dynamic, and irrelevant parameters', ->
+      should.not.exist err
+      res.should.eql fieldParameter: 'Number'
 
-    parentParameters =
-      dynamicParameter: 'Number'
-      irrelevant: 'Wheeeee'
+    it 'should be able to handle static, dynamic, and irrelevant parameters', ->
 
-    parameterizedField =
-      'ParameterizedType':
-        staticParameter: 'String'
-        dynamicParameter: 'parentParameter'
+      parentParameters =
+        dynamicParameter: 'Number'
+        irrelevant: 'Wheeeee'
 
-    [err, res] = selectParametersForField parameterizedField, parentParameters
+      parameterizedField =
+        'ParameterizedType':
+          staticParameter: 'String'
+          dynamicParameter: 'parentParameter'
 
-    should.not.exist err
-    res.should.eql staticParameter: 'String', dynamicParameter: 'Number'
+      [err, res] = selectParametersForField parameterizedField, parentParameters
 
-  it 'should return an empty object when passed a nonparameterized field', ->
-    parentParameters =
-      irrelevant: 'Wheeeee'
-      alsoIrrelevant: 'Woooooo'
+      should.not.exist err
+      res.should.eql staticParameter: 'String', dynamicParameter: 'Number'
 
-    plainField = 'Number'
+    it 'should return an empty object when passed a nonparameterized field', ->
+      parentParameters =
+        irrelevant: 'Wheeeee'
+        alsoIrrelevant: 'Woooooo'
 
-    [err, res] = selectParametersForField plainField, parentParameters
+      plainField = 'Number'
 
-    should.not.exist err
-    res.should.eql {}
+      [err, res] = selectParametersForField plainField, parentParameters
+
+      should.not.exist err
+      res.should.eql {}
+
+  describe 'applying parameters', ->
+
+    it 'should select free and bound parameters for a field', ->
+
+      fieldData =
+        'ParameterizedType':
+          boundParam: 'paramArg'
+          staticParam: 'String'
+          freeParam: 'anotherArg'
+          anotherFreeParam: 'yetAnotherArg'
+
+      params =
+        paramArg: 'Number'
+        irrelevant: 'Integer'
+
+      [freeParameters, boundParameters] = applyTypeParametersForField fieldData, params
+
+      freeParameters.should.includeEql 'freeParam'
+      freeParameters.should.includeEql 'anotherFreeParam'
+
+      boundParameters.boundParam.should.eql 'Number'
+      boundParameters.staticParam.should.eql 'String'
+
+
+  describe.skip '', ->
+    it 'should handle taking a parameter name string as input', ->
+
 

@@ -1,7 +1,7 @@
 
 {createLabelForField, getParserForType, createLabelForType} = require './typeResolver'
 {getOnlyKeyForObject} = require './utilities'
-selectParametersForField = require './selectParametersForField'
+{selectParametersForField} = require './parameterUtilities'
 
 {inspect} = require 'util'
 
@@ -46,11 +46,15 @@ parseFields = (parsers, typeDeclaration, typeParameters) ->
       fieldExists = dataToParse[fieldName]?
       return matched: false unless fieldExists
 
-      thisFieldsParams = selectParametersForField fieldData, typeParameters
+      [err, thisFieldsParams] = selectParametersForField fieldData, typeParameters
 
       typeLabel = createLabelForField fieldData, thisFieldsParams
 
       return recordUseOfUnresolvedType typeLabel unless typeLabel.basetypeisresolved
+
+
+      console.log "thisFieldsParams: #{inspect thisFieldsParams, depth:null}"
+      console.log "TypeLabel: #{inspect typeLabel, depth:null}"
 
       if isNativeType typeLabel
         [err, parser] = getParserForType typeLabel, parsers

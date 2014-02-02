@@ -1,28 +1,16 @@
 
-{getOnlyKeyForObject, beginsWithUpperCase} = require './utilities'
+{getOnlyKeyForObject, beginsWithUpperCase, isString} = require './utilities'
+{applyTypeParametersForField} = require './parameterUtilities'
 
 {inspect} = require 'util'
 
-applyTypeParameters = (fieldParameters, parameterArguments) ->
-  freeParameters = []
-  boundParameters = {}
-
-  for paramName, paramArgument of fieldParameters
-    resolvedParameter = parameterArguments[paramName]
-    if resolvedParameter isnt undefined
-      boundParameters[paramName] = resolvedParameter
-    else
-      freeParameters.push paramName
-
-  [freeParameters, boundParameters]
-
 createLabelForField = (typeData, typeParameters) ->
-  console.log "Making label for #{typeData} with params #{inspect typeParameters, {depth: null}}"
-  isString = Object.prototype.toString.call(typeData) is '[object String]'
-  if isString
+  console.log "Making label for #{inspect typeData, depth:null} with params #{inspect typeParameters, {depth: null}}"
+
+  if isString typeData
     isParameter = not beginsWithUpperCase typeData[0]
     if isParameter
-      [freeParameters, boundParameters] = applyTypeParameters typeData, typeParameters
+      [freeParameters, boundParameters] = applyTypeParametersForField typeData, typeParameters
       fullyResolved = freeParameters.length is 0
       boundParamNames = Object.keys boundParameters
       if boundParamNames.length isnt 0
@@ -45,7 +33,7 @@ createLabelForField = (typeData, typeParameters) ->
       basetypeisresolved: true
   else
     typeName = getOnlyKeyForObject typeData
-    [freeParameters, boundParameters] = applyTypeParameters typeData[typeName], typeParameters
+    [freeParameters, boundParameters] = applyTypeParametersForField typeData[typeName], typeParameters
     name: typeName
     isparameterized: true
     basetypeisresolved: true
