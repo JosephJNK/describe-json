@@ -20,8 +20,6 @@ describe 'type parameters', ->
 
     system.types.ParameterizedType.should.eql parameterizedType.newtype
 
-describe.skip 'type parameters', ->
-
   it 'should allow for a types fields to vary across containers', ->
 
     parameterizedType = newtype:
@@ -105,8 +103,8 @@ describe.skip 'type parameters', ->
     secondMatched.typedata.fields.nonparameterizedField.type.should.eql 'Number'
     secondMatched.typedata.fields.nonparameterizedField.iscontainer.should.eql false
 
-describe.skip '', ->
 
+describe.skip 'type parameters', ->
   it 'something like this', ->
 
     #add in a typeclass that declares 'typeclassParameter'

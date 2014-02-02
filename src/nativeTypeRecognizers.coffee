@@ -1,4 +1,4 @@
-check = Object.prototype.toString
+{checkType, isString} = require './utilities'
 
 wrapNonContainer = (value, type) ->
   matched: true
@@ -17,16 +17,16 @@ module.exports =
     if res.matched then wrapNonContainer(x, 'Float') else res
 
   Number: (x) ->
-    res = matched: check.call(x) is '[object Number]' and not isNaN x
+    res = matched: checkType.call(x) is '[object Number]' and not isNaN x
     if res.matched then wrapNonContainer(x, 'Number') else res
 
   String:
     (x) ->
-      res = matched: check.call(x) is '[object String]'
+      res = matched: isString x
       if res.matched then wrapNonContainer(x, 'String') else res
 
   NaN: (x) ->
-    res = matched: check.call(x) is '[object Number]' and isNaN x
+    res = matched: checkType.call(x) is '[object Number]' and isNaN x
     if res.matched then wrapNonContainer(x, 'NaN') else res
 
   Null: (x) ->
@@ -38,7 +38,7 @@ module.exports =
     if res.matched then wrapNonContainer(x, 'Undefined') else res
 
   Array: (x) ->
-    matched = check.call(x) is '[object Array]'
+    matched = checkType.call(x) is '[object Array]'
     if matched
       matched: true
       data: x
@@ -50,7 +50,7 @@ module.exports =
       matched: false
 
   Object: (x) ->
-    matched = check.call(x) is '[object Object]'
+    matched = checkType.call(x) is '[object Object]'
     if matched
       matched: true
       data: x

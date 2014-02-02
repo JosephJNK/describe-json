@@ -8,10 +8,25 @@ getAllNonemptyNodesInTree = (tree) ->
     nodes.concat subnodes
   nodes
 
+getOnlyKeyForObject = (x) -> Object.keys(x)[0]
+
+checkType = Object.prototype.toString
+
 module.exports =
+
   cloneFlatObject: (obj) ->
     clone = {}
     clone[fieldName] = fieldType for fieldName, fieldType of obj
     clone
 
   getAllNonemptyNodesInTree: getAllNonemptyNodesInTree
+
+  getOnlyKeyForObject: getOnlyKeyForObject
+
+  getOnlyValueForObject: (x) -> x[getOnlyKeyForObject(x)]
+
+  beginsWithUpperCase: (x) -> x[0].toUpperCase() is x[0]
+
+  checkType: checkType
+
+  isString: (x) -> checkType.call(x) is '[object String]'

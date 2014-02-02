@@ -1,3 +1,8 @@
+
+{getOnlyKeyForObject, beginsWithUpperCase} = require './utilities'
+
+{inspect} = require 'util'
+
 applyTypeParameters = (fieldParameters, parameterArguments) ->
   freeParameters = []
   boundParameters = {}
@@ -12,25 +17,29 @@ applyTypeParameters = (fieldParameters, parameterArguments) ->
   [freeParameters, boundParameters]
 
 createLabelForField = (typeData, typeParameters) ->
+  console.log "Making label for #{typeData} with params #{inspect typeParameters, {depth: null}}"
   isString = Object.prototype.toString.call(typeData) is '[object String]'
   if isString
-    isParameter = typeData[0].toUpperCase() isnt typeData[0]
+    isParameter = not beginsWithUpperCase typeData[0]
     if isParameter
       [freeParameters, boundParameters] = applyTypeParameters typeData, typeParameters
       fullyResolved = freeParameters.length is 0
-      boundParamNames = Object.keys(x)
+      boundParamNames = Object.keys boundParameters
       if boundParamNames.length isnt 0
+        console.log 'resolved parameterized type'
         name: boundParamNames[0]
         isparameterized: true
         basetypeisresolved: true
         freeparameters: freeParameters.sort()
         boundparameters: boundParameters
       else
+        console.log 'unresolved parameterized type'
         isparameterized: true
         basetypeisresolved: false
         freeparameters: freeParameters.sort()
         boundparameters: boundParameters
     else
+      console.log 'nonparameterized type'
       name: typeData
       isparameterized: false
       basetypeisresolved: true

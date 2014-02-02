@@ -1,13 +1,15 @@
 
 {createLabelForField, getParserForType, createLabelForType} = require './typeResolver'
+{getOnlyKeyForObject} = require './utilities'
+selectParametersForField = require './selectParametersForField'
+
+{inspect} = require 'util'
 
 nativeTypes = Object.keys require './nativeTypeRecognizers'
 
 isNativeType = (type) -> nativeTypes.indexOf type.name isnt -1
 
 isTypeParameter = (type, typeParameters) -> typeParameters.indexOf type.name isnt -1
-
-getOnlyKeyForObject = (x) -> Object.keys(x)[0]
 
 resolveTypeParameter = (parameterName, typeParameters) -> typeParameters[parameterName]
 
@@ -16,10 +18,10 @@ getNameAndTypeFromFieldObject = (x) ->
   fieldType = x[fieldName]
   [fieldName, fieldType]
 
-parseNested = (parsers, fieldLabels, dataToParse) ->
+parseNested = (parsers, fieldLabels, dataToParse, typeParameters) ->
   [err, parser] = getParserForType fieldLabels, parsers
   throw err if err
-  nestedParser = parseFields parsers, parser.fields
+  nestedParser = parseFields parsers, parser.fields, typeParameters
   nestedParser dataToParse
 
 packIR = (packedObj, fieldName, ir) ->
@@ -44,7 +46,10 @@ parseFields = (parsers, typeDeclaration, typeParameters) ->
       fieldExists = dataToParse[fieldName]?
       return matched: false unless fieldExists
 
-      typeLabel = createLabelForField fieldData, typeParameters
+      thisFieldsParams = selectParametersForField fieldData, typeParameters
+
+      typeLabel = createLabelForField fieldData, thisFieldsParams
+
       return recordUseOfUnresolvedType typeLabel unless typeLabel.basetypeisresolved
 
       if isNativeType typeLabel
@@ -52,7 +57,7 @@ parseFields = (parsers, typeDeclaration, typeParameters) ->
         throw err if err?
         ir = parser dataToParse[fieldName]
       else
-        ir = parseNested parsers, fieldLabel, dataToParse[fieldName]
+        ir = parseNested parsers, fieldLabel, dataToParse[fieldName], thisFieldsParams
 
       return matched: false unless ir.matched
       packIR result, fieldName, ir
