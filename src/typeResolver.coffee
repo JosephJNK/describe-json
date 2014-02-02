@@ -86,7 +86,7 @@ addItemToLabelledCollection = (label, item, collection) ->
   collection.unparameterized = {} unless collection.unparameterized?
   collection.resolved = {} unless collection.unparameterized?
 
-  return triedToAddInvalidObject label unless label.basetypeisresolved
+  return ["Tried to add an item with an unresolved base type: #{label}", null] unless label.basetypeisresolved
 
   {name, isparameterized} = label
 
@@ -95,9 +95,7 @@ addItemToLabelledCollection = (label, item, collection) ->
     collection.parameterized[name] = item
   else
     collection.unparameterized[name] = item
-
-triedToAddInvalidObject = (label) ->
-  throw 'Tried to add an item with an unresolved base type'
+  null
 
 module.exports =
   createLabelForField: createLabelForField

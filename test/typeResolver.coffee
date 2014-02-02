@@ -38,10 +38,14 @@ describe 'Type Resolver', ->
 
     collection = {}
 
-    typeResolver.addItemToLabelledCollection paramTypeLabel, parameterizedTypeName, collection
-    typeResolver.addItemToLabelledCollection typeLabel, typeName, collection
-    typeResolver.addItemToLabelledCollection paramTypeclassLabel, parameterizedTypeclassName, collection
-    typeResolver.addItemToLabelledCollection typeclassLabel, typeclassName, collection
+    err = typeResolver.addItemToLabelledCollection paramTypeLabel, parameterizedTypeName, collection
+    should.not.exist err
+    err = typeResolver.addItemToLabelledCollection typeLabel, typeName, collection
+    should.not.exist err
+    err = typeResolver.addItemToLabelledCollection paramTypeclassLabel, parameterizedTypeclassName, collection
+    should.not.exist err
+    err = typeResolver.addItemToLabelledCollection typeclassLabel, typeclassName, collection
+    should.not.exist err
 
     [err, res] = typeResolver.getFromCollectionByLabel paramTypeLabel, collection
     should.not.exist err
