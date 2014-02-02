@@ -5,21 +5,25 @@ module.exports =
 
   selectParametersForField: (fieldDeclaration, parentParameters) ->
 
-    return [null, {}] if isString fieldDeclaration
+    if isString fieldDeclaration
+      if not beginsWithUpperCase(fieldDeclaration) and parentParameters[fieldDeclaration]?
+        result = {}
+        result[fieldDeclaration] = parentParameters[fieldDeclaration]
+        return [null, result]
+      return [null, {}]
 
-    fieldParams = getOnlyValueForObject fieldDeclaration
-    staticParams = []
-    dynamicParams = []
+    fieldName = getOnlyKeyForObject fieldDeclaration
+    console.log fieldName
+    fieldParams = fieldDeclaration[fieldName]
+    resolvedParams = {}
+
+    resolvedParams[fieldName] = parentParameters[fieldName] unless beginsWithUpperCase fieldName
 
     for paramName, paramValue of fieldParams
       if beginsWithUpperCase paramValue
-        staticParams.push paramName
+        resolvedParams[paramName] = fieldParams[paramName]
       else
-        dynamicParams.push paramName
-
-    resolvedParams = {}
-    resolvedParams[paramName] = fieldParams[paramName] for paramName in staticParams
-    resolvedParams[paramName] = parentParameters[paramName] for paramName in dynamicParams
+        resolvedParams[paramName] = parentParameters[paramValue]
 
     return [null, resolvedParams]
 

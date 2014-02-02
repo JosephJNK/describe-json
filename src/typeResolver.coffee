@@ -4,6 +4,12 @@
 
 createLabelForField = (typeData, typeParameters) ->
 
+  {inspect} = require 'util'
+  console.log '\n'
+  console.log "typeData: #{inspect typeData, depth:null}"
+  console.log "typeParameters: #{inspect typeParameters, depth:null}"
+  console.log '\n'
+
   fieldData = getOnlyValueForObject typeData
 
   if isString fieldData
@@ -65,11 +71,13 @@ createLabelForPattern = (typeName) ->
 getFromCollectionByLabel = (label, collection) ->
   return ['Cannot look up an item with an unresolved name', null] unless label?.name?
   if label.isparameterized
+    console.log "got a parameterized type for #{label.name}"
     #TODO: Expand this to be able to cache resolved parameterized types
     item = collection?.parameterized?[label.name]
     if item? then [null, item] else ['No such item found', null]
   else
     item = collection?.unparameterized?[label.name]
+    console.log "got an unparameterized type for #{label.name}"
     if item? then [null, item] else ['No such item found', null]
 
 addItemToLabelledCollection = (label, item, collection) ->

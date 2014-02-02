@@ -7,22 +7,17 @@
 
 nativeTypes = Object.keys require './nativeTypeRecognizers'
 
-isNativeType = (type) -> nativeTypes.indexOf type.name isnt -1
-
-isTypeParameter = (type, typeParameters) -> typeParameters.indexOf type.name isnt -1
-
-resolveTypeParameter = (parameterName, typeParameters) -> typeParameters[parameterName]
+isNativeType = (type) -> nativeTypes.indexOf(type.name) isnt -1
 
 getNameAndTypeFromFieldObject = (x) ->
   fieldName = getOnlyKeyForObject x
   fieldType = x[fieldName]
   [fieldName, fieldType]
 
-parseNested = (parsers, fieldLabels, dataToParse, typeParameters) ->
-  [err, parser] = getParserForType fieldLabels, parsers
+parseNested = (parsers, fieldLabel, dataToParse, typeParameters) ->
+  [err, parser] = getParserForType fieldLabel, parsers
   throw err if err
-  nestedParser = parseFields parsers, parser.fields, typeParameters
-  nestedParser dataToParse
+  parser dataToParse
 
 packIR = (packedObj, fieldName, ir) ->
   packedObj.data[fieldName] = ir.data
@@ -33,6 +28,9 @@ recordUseOfUnresolvedType = (typeLabel) ->
 
 parseFields = (parsers, typeDeclaration, typeParameters) ->
   (dataToParse) ->
+
+    console.log "typeDeclaration: #{inspect typeDeclaration, depth: null}"
+    console.log "typeParameters: #{inspect typeParameters, depth: null}"
 
     result =
       matched: true
@@ -52,14 +50,20 @@ parseFields = (parsers, typeDeclaration, typeParameters) ->
       fieldObj[fieldName] = fieldData
       typeLabel = createLabelForField fieldObj, thisFieldsParams
 
+      console.log "fieldName: #{fieldName}"
+      console.log "thisFieldsParams: #{inspect thisFieldsParams, depth: null}"
+      console.log "typelabel: #{inspect typeLabel, depth: null}"
+
       return recordUseOfUnresolvedType typeLabel unless typeLabel.basetypeisresolved
 
       if isNativeType typeLabel
         [err, parser] = getParserForType typeLabel, parsers
         throw err if err?
+        console.log "parsing #{typeLabel.name}"
         ir = parser dataToParse[fieldName]
       else
-        ir = parseNested parsers, fieldLabel, dataToParse[fieldName], thisFieldsParams
+        console.log 'going to parseNested'
+        ir = parseNested parsers, typeLabel, dataToParse[fieldName], thisFieldsParams
 
 
       return matched: false unless ir.matched

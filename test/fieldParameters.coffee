@@ -18,11 +18,11 @@ describe 'Field parameter resolution', ->
 
     it 'should be able to apply containing type parameters to a parametrically typed field', ->
 
-      parentParameters = fieldParameter: 'Number'
+      parentParameters = aFieldParameter: 'Number'
 
       parameterizedField =
         'ParameterizedType':
-          fieldParameter: 'fieldParameter'
+          fieldParameter: 'aFieldParameter'
 
       [err, res] = selectParametersForField parameterizedField, parentParameters
 
@@ -32,7 +32,7 @@ describe 'Field parameter resolution', ->
     it 'should be able to handle static, dynamic, and irrelevant parameters', ->
 
       parentParameters =
-        dynamicParameter: 'Number'
+        parentParameter: 'Number'
         irrelevant: 'Wheeeee'
 
       parameterizedField =
@@ -56,6 +56,40 @@ describe 'Field parameter resolution', ->
 
       should.not.exist err
       res.should.eql {}
+
+    it 'should select a type argument when a field has a parametric type', ->
+      parentParameters =
+        typeArg: 'Number'
+        irrelevant: 'Wheeeee'
+
+      field = 'typeArg'
+
+      [err, res] = selectParametersForField field, parentParameters
+
+      should.not.exist err
+      res.should.eql typeArg: 'Number'
+
+    it 'should handle fields with a parametric type and type args', ->
+      parentParameters =
+        typeArg: 'Number'
+        parentParameter: 'Float'
+        irrelevant: 'Wheeeee'
+
+      field =
+        'typeArg':
+          staticParameter: 'String'
+          dynamicParameter: 'parentParameter'
+
+      [err, res] = selectParametersForField field, parentParameters
+
+      {inspect} = require 'util'
+      console.log inspect res
+
+      should.not.exist err
+      res.typeArg.should.eql 'Number'
+      res.staticParameter.should.eql 'String'
+      res.dynamicParameter.should.eql 'Float'
+
 
   describe 'applying parameters', ->
 
