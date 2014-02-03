@@ -3,15 +3,15 @@ describe-json
 
 Algebraic data types and pattern matching for JSON
 
-## Overview
+# Overview
 
 describe-json is a tool for input validation for APIs which consume JSON, and for parsing JSON data structures and domain specific languages. Its declarative syntax makes the structure of expected input explicit, and its pattern matching functionality makes parsing input simpler and less error prone. It is currently under development and in beta. Some features may not be complete.
 
-## Features
+# Features
 
 All input into describe-json is JSON, with the exception of pattern matching, which takes functions as well.
 
-# Types
+## Types
 
 A type is described with the following syntax
 
@@ -42,7 +42,7 @@ newtype:
     int: 'Integer'
 ```
 
-# Typeclasses
+## Typeclasses
 
 A typeclass specifies fields with given types that must exist on any type which is a member of the typeclass. Their syntax is similar to that of types:
 
@@ -84,7 +84,7 @@ newtype:
     objectContainingNumberField: 'SimpleTypeclass'
 ```
 
-# Type Parameters
+## Type Parameters
 
 Type parameters are currently under development and will be enabled soon.
 
@@ -113,7 +113,7 @@ newtype:
 
 Support for type parameters on typeclasses, and the use of a typeclass as a type parameter are being added as well.
 
-# Initialization
+## Initialization
 
 Initialization is currently a little clunky, and will eventually be streamlined.
 
@@ -130,7 +130,7 @@ system.register newtype:
 dispatch = dispatcher.init system
 ```
 
-# Pattern Matching
+## Pattern Matching
 
 Pattern matching is currently only supported on the names of types and typeclasses. Future development will focus on specifying field properties and type parameters in patterns.
 
@@ -147,6 +147,6 @@ dispatch {floatField: 'foo'}, [
 ```
 Patterns occurring earlier in the dispatch list take precedence over patterns occuring later. The 'otherwise' pattern is matched if no earlier patterns match.
 
-## Current Development
+# Current Development
 
 describe-json is currently under heavy development and is not recommended for use at this time. Implementation of type parameters is the current top priority, followed by more powerful pattern support and increased static checking.
