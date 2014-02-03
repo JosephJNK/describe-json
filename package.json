@@ -1,11 +1,10 @@
 {
-  "name": "describe-data",
-  "description": "Strongly typed, declarative algebraic data types and pattern matching for JSON",
+  "name": "describe-json",
+  "version": "0.1.0",
+  "description": "Declarative algebraic data types and pattern matching for JSON",
   "author": "Joseph Junker <joseph.jnk@gmail.com>",
   "dependencies": {
-    "async": "0.2.x",
-    "coffee-script-redux": "2.0.x",
-    "underscore": "1.5.x"
+    "coffee-script": "1.6.x",
   },
   "devDependencies": {
     "mocha": "1.15.x",
@@ -13,7 +12,6 @@
   },
   "engine": "node >= 10.22",
   "license": "MIT",
-  "private": true,
   "scripts": {
     "test": "mocha"
   }
