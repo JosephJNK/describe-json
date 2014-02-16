@@ -17,7 +17,7 @@ getNameAndTypeFromFieldObject = (x) ->
 parseNested = (parsers, fieldLabel, dataToParse, typeParameters) ->
   [err, parser] = getParserForType fieldLabel, parsers
   throw err if err
-  parser dataToParse
+  parser dataToParse, typeParameters
 
 packIR = (packedObj, fieldName, ir) ->
   packedObj.data[fieldName] = ir.data
@@ -26,8 +26,8 @@ packIR = (packedObj, fieldName, ir) ->
 recordUseOfUnresolvedType = (typeLabel) ->
   throw 'Attempted to parse an unresolved type'
 
-parseFields = (parsers, typeDeclaration, typeParameters) ->
-  (dataToParse) ->
+parseFields = (parsers, typeDeclaration) ->
+  (dataToParse, typeParameters) ->
 
     console.log "typeDeclaration: #{inspect typeDeclaration, depth: null}"
     console.log "typeParameters: #{inspect typeParameters, depth: null}"
@@ -36,6 +36,7 @@ parseFields = (parsers, typeDeclaration, typeParameters) ->
       matched: true
       data: {}
       typedata:
+        typeparameters: if typeParameters? then typeParameters else {}
         iscontainer: true
         type: typeDeclaration.name
         fields: {}
@@ -85,7 +86,7 @@ makeTypeclassParser = (parsers, typeclassMembers, types) ->
 generateParser = (declarationType, newType, parsers, typeclassMembers, types) ->
   if declarationType is 'type'
     if newType.fields?
-      fieldsParser = parseFields parsers, newType, {}
+      fieldsParser = parseFields parsers, newType
       return fieldsParser
 
   if declarationType is 'typeclass'

@@ -2,6 +2,8 @@ recognizer = require '../src/recognizer'
 typeSystem = require '../src/typeSystem'
 should = require 'should'
 
+{inspect} = require 'util'
+
 describe 'type parameters', ->
 
   it 'should be registerable with the type system', ->
@@ -41,7 +43,7 @@ describe 'type parameters', ->
       name: 'StringOuterType'
       fields:
         parameterizedField:
-          'ParameterizedField':
+          'ParameterizedType':
             fieldParameter: 'String'
         nonparameterizedField: 'Number'
 
@@ -62,16 +64,17 @@ describe 'type parameters', ->
     firstMatched.matched.should.eql true
     firstMatched.data.should.eql firstData
     firstMatched.typedata.type.should.eql 'NumberOuterType'
+    firstMatched.typedata.typeparameters.should.eql {}
     firstMatched.typedata.iscontainer.should.eql true
 
     firstMatched.typedata.fields.parameterizedField.type.should.eql 'ParameterizedType'
-    firstMatched.typedata.fields.parameterizedField.typeParameters.should.eql {fieldParameter: 'Number'}
+    firstMatched.typedata.fields.parameterizedField.typeparameters.should.eql {fieldParameter: 'Number'}
     firstMatched.typedata.fields.parameterizedField.iscontainer.should.eql true
 
     firstMatched.typedata.fields.parameterizedField.fields.intField.type.should.eql 'Integer'
     firstMatched.typedata.fields.parameterizedField.fields.intField.iscontainer.should.eql false
 
-    firstMatched.typedata.fields.parameterizedField.fields.innerParameterized.type.should.eql 'Integer'
+    firstMatched.typedata.fields.parameterizedField.fields.innerParameterized.type.should.eql 'Number'
     firstMatched.typedata.fields.parameterizedField.fields.innerParameterized.iscontainer.should.eql false
 
     firstMatched.typedata.fields.nonparameterizedField.type.should.eql 'String'
@@ -83,15 +86,16 @@ describe 'type parameters', ->
         innerParameterized: 'bar'
       nonparameterizedField: -2
 
-    secondMatched = recognize 'NumberOuterType', firstData
+    secondMatched = recognize 'StringOuterType', secondData
 
     secondMatched.matched.should.eql true
-    secondMatched.data.should.eql firstData
+    secondMatched.data.should.eql secondData
     secondMatched.typedata.type.should.eql 'StringOuterType'
+    secondMatched.typedata.typeparameters.should.eql {}
     secondMatched.typedata.iscontainer.should.eql true
 
     secondMatched.typedata.fields.parameterizedField.type.should.eql 'ParameterizedType'
-    secondMatched.typedata.fields.parameterizedField.typeParameters.should.eql {fieldParameter: 'String'}
+    secondMatched.typedata.fields.parameterizedField.typeparameters.should.eql {fieldParameter: 'String'}
     secondMatched.typedata.fields.parameterizedField.iscontainer.should.eql true
 
     secondMatched.typedata.fields.parameterizedField.fields.intField.type.should.eql 'Integer'

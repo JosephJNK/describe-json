@@ -69,8 +69,9 @@ describe 'Type Resolver', ->
     parameterizedField = parameterized: 'fieldParameter'
     typeParameters = fieldParameter: 'Number', irrelevant: 'String'
     resolvedLabel = typeResolver.createLabelForField parameterizedField, typeParameters
+
     resolvedLabel.name.should.eql 'Number'
-    resolvedLabel.isparameterized.should.eql true
+    resolvedLabel.isparameterized.should.eql false
     resolvedLabel.basetypeisresolved.should.eql true
     resolvedLabel.freeparameters.should.eql []
     resolvedLabel.boundparameters.should.eql {}
