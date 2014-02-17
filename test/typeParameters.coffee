@@ -108,48 +108,81 @@ describe 'type parameters', ->
     secondMatched.typedata.fields.nonparameterizedField.iscontainer.should.eql false
 
 
-describe.skip 'type parameters', ->
-  it 'something like this', ->
+  it 'should let a typeclass contain a parametric type', ->
 
-    #add in a typeclass that declares 'typeclassParameter'
-    parameterizedType = newtype:
-      name: 'ParameterizedType'
-      typeparameters: ['fieldParameter', 'passedParameter']
-      fields:
-        intField: 'Integer'
-        innerParameterized:
-          'fieldParameter':
-            typeclassParameter: 'passedParameter'
+    console.log '----------------------------------------'
 
-
-  it 'should allow parameters to be passed through multiple levels of wrappers', ->
-
-  it 'should handle fields with multiple type parameters', ->
-
-  it 'should let a type class take type parameters', ->
 
     parameterizedType = newtype:
       name: 'ParameterizedType'
       typeparameters: ['fieldParameter']
       fields:
         intField: 'Integer'
-        parameterizedField: 'fieldParameter'
+        innerParameterized: 'fieldParameter'
 
     wrapperTypeclass = newtypeclass:
       name: 'WrapperTypeclass'
-      typeparameters: ['outerParameter']
+      typeparameters: ['passedThroughParameter', 'ownParameter']
       fields:
         parameterizedField:
           'ParameterizedType':
-            fieldParameter: 'outerParameter'
+            fieldParameter: 'passedThroughParameter'
+        polymorphicField: 'ownParameter'
+        floatField: 'Float'
 
     outerType = newtype:
       name: 'OuterType'
       typeclasses: [ {
-        'WrapperTypeclass': { outerParameter: 'String'}
+        'WrapperTypeclass': { passedThroughParameter: 'String', ownParameter: 'Integer'}
       } ]
 
-    throw 'remember to add assertions here'
+    data =
+      parameterizedField:
+        intField: 5
+        innerParameterized: 'foo'
+      polymorphicField: -3
+      floatField: 2.5
+
+    system = typeSystem.init()
+    system.register wrapperTypeclass
+    system.register parameterizedType
+    err = system.register outerType
+    should.not.exist err
+    recognize = recognizer.init system
+
+    matched = recognize 'OuterType', data
+
+    matched.matched.should.eql true
+    matched.data.should.eql firstData
+    matched.typedata.type.should.eql 'OuterType'
+    matched.typedata.typeparameters.should.eql {}
+    matched.typedata.iscontainer.should.eql true
+
+    matched.typedata.fields.parameterizedField.type.should.eql 'ParameterizedType'
+    matched.typedata.fields.parameterizedField.typeparameters.should.eql {fieldParameter: 'String'}
+    matched.typedata.fields.parameterizedField.iscontainer.should.eql true
+
+    matched.typedata.fields.parameterizedField.fields.intField.type.should.eql 'Integer'
+    matched.typedata.fields.parameterizedField.fields.intField.iscontainer.should.eql false
+
+    matched.typedata.fields.parameterizedField.fields.innerParameterized.type.should.eql 'String'
+    matched.typedata.fields.parameterizedField.fields.innerParameterized.iscontainer.should.eql false
+
+    matched.typedata.fields.polymorphicField.type.should.eql 'Integer'
+    matched.typedata.fields.polymorphicField.iscontainer.should.eql false
+
+    matched.typedata.fields.floatField.type.should.eql 'Float'
+    matched.typedata.fields.floatField.iscontainer.should.eql false
+
+
+describe.skip 'type parameters', ->
+
+
+  it 'should let a typclass contain parametric fields', ->
+
+  it 'should allow parameters to be passed through multiple levels of wrappers', ->
+
+  it 'should handle fields with multiple type parameters', ->
 
   it 'should have validations during registration', ->
     true.should.eql false

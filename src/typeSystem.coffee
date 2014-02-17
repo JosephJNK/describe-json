@@ -1,6 +1,7 @@
 generateRecursiveParser = require './generateRecursiveParser'
 resolveTypeGraph = require './resolveTypeGraph'
 nativeTypeRecognizers = require './nativeTypeRecognizers'
+{isString, getOnlyKeyForObject} = require './utilities'
 
 { addItemToLabelledCollection, createLabelForType, createLabelForTypeclass, createLabelForNativeType } = require './typeResolver'
 
@@ -27,8 +28,13 @@ module.exports =
       return 'Typeclass names must begin with a capital letter' unless newtypeclass.name.match /^[A-Z]/
       null
 
-    addMemberTypes = (typeName, typeclassNames) ->
-      for typeclassName in typeclassNames
+    addMemberTypes = (typeName, declaredTypeclasses) ->
+      for typeclass in declaredTypeclasses
+        if isString typeclass
+          typeclassName = typeclass
+        else
+          typeclassName = getOnlyKeyForObject typeclass
+
         if typeclassMembers[typeclassName]?
           typeclassMembers[typeclassName].push typeName
         else

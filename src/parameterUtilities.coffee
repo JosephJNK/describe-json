@@ -1,6 +1,29 @@
 
 {getOnlyValueForObject, getOnlyKeyForObject, beginsWithUpperCase, isString} = require './utilities'
 
+isResolvedTypeName = (x) -> isString(x) and beginsWithUpperCase(x)
+isParameterName = (x) -> isString(x) and !beginsWithUpperCase(x)
+
+applyParametersFromFieldObject = (fieldObject, parameterArguments, freeParameters, boundParameters) ->
+  for paramName, paramArgument of getOnlyValueForObject fieldObject
+    if isResolvedTypeName paramArgument
+      boundParameters[paramName] = paramArgument
+    else
+      resolvedArgument = parameterArguments[paramArgument]
+      applyParameterArgsForPolymorphicType paramName, resolvedArgument, freeParameters, boundParameters
+
+applyParameterArgsForPolymorphicType = (paramName, resolvedArgument, freeParameters, boundParameters) ->
+  if resolvedArgument?
+    boundParameters[paramName] = resolvedArgument
+  else
+    freeParameters.push paramName
+
+applyFieldTypeAsParameter = (typeName, parameterArguments, freeParameters, boundParameters) ->
+  if parameterArguments[typeName]?
+    boundParameters[typeName] = parameterArguments[typeName]
+  else
+    freeParameters.push typeName
+
 module.exports =
 
   selectParametersForField: (fieldDeclaration, parentParameters) ->
@@ -28,37 +51,21 @@ module.exports =
     return [null, resolvedParams]
 
 
-  applyTypeParametersForField: (fieldTypeData, parameterArguments) ->
+  applyTypeParametersForField: (fieldDeclaration, parameterArguments) ->
     freeParameters = []
     boundParameters = {}
 
-    if isString fieldTypeData
-      unless beginsWithUpperCase fieldTypeData
+    if isResolvedTypeName fieldDeclaration
+      return [freeParameters, boundParameters]
 
-        if parameterArguments[fieldTypeData]?
-          boundParameters[fieldTypeData] = parameterArguments[fieldTypeData]
-        else
-          freeParameters.push fieldTypeData
+    if isParameterName fieldDeclaration
+      applyFieldTypeAsParameter fieldDeclaration, parameterArguments, freeParameters, boundParameters
+      return [freeParameters, boundParameters]
 
-      return [freeParameters, boundParameters] 
+    fieldTypeName = getOnlyKeyForObject fieldDeclaration
+    if isParameterName fieldTypeName
+      applyFieldTypeAsParameter fieldTypeName, parameterArguments, freeParameters, boundParameters
 
-    paramType = getOnlyKeyForObject fieldTypeData
-
-    unless beginsWithUpperCase paramType
-      if parameterArguments[paramType]?
-        boundParameters[paramType] = parameterArguments[paramType]
-      else
-        freeParameters.push paramType
-
-
-    for paramName, paramArgument of getOnlyValueForObject fieldTypeData
-
-      if beginsWithUpperCase paramArgument
-        boundParameters[paramName] = paramArgument
-      else
-        if parameterArguments[paramArgument]?
-          boundParameters[paramName] = parameterArguments[paramArgument]
-        else
-          freeParameters.push paramName
+    applyParametersFromFieldObject fieldDeclaration, parameterArguments, freeParameters, boundParameters
 
     [freeParameters, boundParameters]
