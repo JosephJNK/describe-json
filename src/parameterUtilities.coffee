@@ -24,34 +24,46 @@ applyFieldTypeAsParameter = (typeName, parameterArguments, freeParameters, bound
   else
     freeParameters.push typeName
 
+selectFieldTypeAsParameter = (fieldType, parentParameters) ->
+  if parentParameters[fieldType]?
+    result = {}
+    result[fieldType] = parentParameters[fieldType]
+    return [null, result]
+  else
+    return [null, {}]
+
+selectResolvedFieldParameters = (fieldParameters, parentParameters, resolvedParameters) ->
+  for paramName, paramValue of fieldParameters
+    if beginsWithUpperCase paramValue
+      resolvedParameters[paramName] = fieldParameters[paramName]
+    else
+      resolvedParameters[paramName] = parentParameters[paramValue]
+
 module.exports =
 
   selectParametersForField: (fieldDeclaration, parentParameters) ->
+    # resolvedParams are of the form parameterName: resolvedParameterValue
 
-    if isString fieldDeclaration
-      if not beginsWithUpperCase(fieldDeclaration) and parentParameters[fieldDeclaration]?
-        result = {}
-        result[fieldDeclaration] = parentParameters[fieldDeclaration]
-        return [null, result]
+    if isResolvedTypeName fieldDeclaration
       return [null, {}]
 
+    if isParameterName fieldDeclaration
+      return selectFieldTypeAsParameter fieldDeclaration, parentParameters
+
     fieldName = getOnlyKeyForObject fieldDeclaration
-    console.log fieldName
-    fieldParams = fieldDeclaration[fieldName]
     resolvedParams = {}
 
-    resolvedParams[fieldName] = parentParameters[fieldName] unless beginsWithUpperCase fieldName
+    if isParameterName fieldName
+      resolvedParams[fieldName] = parentParameters[fieldName]
 
-    for paramName, paramValue of fieldParams
-      if beginsWithUpperCase paramValue
-        resolvedParams[paramName] = fieldParams[paramName]
-      else
-        resolvedParams[paramName] = parentParameters[paramValue]
+    selectResolvedFieldParameters fieldDeclaration[fieldName], parentParameters, resolvedParams
 
     return [null, resolvedParams]
 
 
   applyTypeParametersForField: (fieldDeclaration, parameterArguments) ->
+    # freeParameters is a list of unresolved parameters
+    # boundParameters are of the form parameterName: resolvedParameterValue
     freeParameters = []
     boundParameters = {}
 
