@@ -93,5 +93,51 @@ describe 'resolveTypeGraph', ->
       'WrapperTypeclass': [ 'OuterType' ]
     }
 
-describe.skip '', ->
-  it 'should let polymorphic fields be passed through multiple layers of typeclasses', ->
+  it 'should let typeclasses pass parameters to the typeclasses they extend', ->
+
+    outerTypeclassA = newtypeclass:
+      name: 'OuterTypeclassA'
+      typeparameters: ['aParameter']
+      fields:
+        aField: 'aParameter'
+
+    outerTypeclassB = newtypeclass:
+      name: 'OuterTypeclassB'
+      typeparameters: ['bParameter']
+      fields:
+        bField: 'bParameter'
+
+    innerTypeclass = newtypeclass:
+      name: 'InnerTypeclass'
+      extends: [
+        {'OuterTypeclassA': aParameter: 'innerParam'},
+        {'OuterTypeclassB': bParameter: 'innerParam'}
+      ]
+      typeparameters: ['innerParam']
+
+    aType = newtype:
+      name: 'AType'
+      typeclasses: [ {
+        'InnerTypeclass': { innerParam: 'Integer'}
+      } ]
+
+    system = typeSystem.init()
+    system.register outerTypeclassA
+    system.register outerTypeclassB
+    system.register innerTypeclass
+    system.register aType
+
+    [err, resolvedForms] = resolve system.types, system.typeclasses
+    should.not.exist err
+
+    console.log "resolvedForms:\n#{inspect resolvedForms, depth: null}"
+
+    resolvedForms.typefields.AType.should.eql
+      aField: 'Integer'
+      bField: 'Integer'
+
+    resolvedForms.typeclassmembers.should.eql
+      'OuterTypeclassA': [ 'AType' ]
+      'OuterTypeclassB': [ 'AType' ]
+      'InnerTypeclass': [ 'AType' ]
+

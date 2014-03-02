@@ -65,7 +65,6 @@ getParametersToExtendedTypeclass = (typeclassName, extendedTypeclassName, typecl
   return {}
 
 getParametersToTypeclassForType = (typeDeclaration, typeclassName) ->
-  #TODO remove duplication with above
   typeclassDeclarations = typeDeclaration.typeclasses
   for typeclass in typeclassDeclarations
     if utilities.isObject(typeclass) and utilities.getOnlyKeyForObject(typeclass) is typeclassName
@@ -73,8 +72,13 @@ getParametersToTypeclassForType = (typeDeclaration, typeclassName) ->
   return {}
 
 getFieldsFromInheritanceTree = (typeclassName, inheritanceTree, typeclasses, typeParameters) ->
+  console.log '\n\ntypeclassName:', typeclassName
+  console.log '\n\ntypeParameters:', typeParameters
   myUnresolvedFields = getTypeclassFields typeclassName, typeclasses
+  console.log "myUnresolvedFields:\n#{inspect myUnresolvedFields, depth:null}"
   myTypeclassFields = resolveAllPossibleParameters myUnresolvedFields, typeParameters
+  console.log "myTypeclassFields:\n#{inspect myTypeclassFields, depth:null}"
+  console.log '\n'
   return [null, myTypeclassFields] if inheritanceTree is {}
 
   flattenedSiblingTrees = {}
@@ -82,9 +86,11 @@ getFieldsFromInheritanceTree = (typeclassName, inheritanceTree, typeclasses, typ
   for extendedTypeclassName, extendedTypeclassInheritanceTree of inheritanceTree
     parametersToExtendedTypeclass = getParametersToExtendedTypeclass typeclassName, extendedTypeclassName, typeclasses
     console.log 'parametersToExtendedTypeclass: ', inspect parametersToExtendedTypeclass
-    parametersToExtendedTypeclass = resolveAllPossibleParameters parametersToExtendedTypeclass, typeParameters
+    resolvedTypeclassParams = resolveAllPossibleParameters parametersToExtendedTypeclass, typeParameters
+    console.log 'resolvedTypeclassParams: ', inspect resolvedTypeclassParams
 
-    [err, extendedTypeclassFields] = getFieldsFromInheritanceTree extendedTypeclassName, extendedTypeclassInheritanceTree, typeclasses, parametersToExtendedTypeclass
+    [err, extendedTypeclassFields] = getFieldsFromInheritanceTree extendedTypeclassName, extendedTypeclassInheritanceTree, typeclasses, resolvedTypeclassParams
+    console.log 'extendedTypeclassFields:', inspect extendedTypeclassFields, depth:null
     return [err, null] if err
 
     flattenedSiblingTrees[extendedTypeclassName] = extendedTypeclassFields
