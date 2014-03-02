@@ -1,5 +1,6 @@
 {inspect} = require 'util'
 utilities = require './utilities'
+{resolveAllPossibleParameters} = require './parameterUtilities'
 
 resolveTypeclassFields = (typeclasses) ->
   [err, inheritanceTree] = createInheritanceTree typeclasses
@@ -24,13 +25,18 @@ dfs = (typeclasses, current, visited) ->
   elements = {}
 
   for parent in parentTypes
-    return ['Cycle exists', null] unless visited.indexOf parent is -1
-    newVisited = visited.concat parent
-    [err, parentTree] = dfs typeclasses, parent, newVisited
+    parentName = extractTypeclassName parent
+    return ['Cycle exists', null] unless visited.indexOf parentName is -1
+    newVisited = visited.concat parentName
+    [err, parentTree] = dfs typeclasses, parentName, newVisited
     return [err, null] if err
-    elements[parent] = parentTree
+    elements[parentName] = parentTree
 
   [null, elements]
+
+extractTypeclassName = (parentNameOrObject) ->
+  return parentNameOrObject if utilities.isString parentNameOrObject
+  utilities.getOnlyKeyForObject parentNameOrObject
 
 createInheritanceTree = (typeclasses) ->
   resolved = {}
@@ -46,27 +52,48 @@ getTypeclassFields = (typeclassName, typeclasses) ->
 reduceInheritanceTrees = (inheritanceTree, typeclasses) ->
   resolvedInterfaces = {}
   for typeName, typeParentTree of inheritanceTree
-    [err, resolved] = getFieldsFromInheritanceTree typeName, typeParentTree, typeclasses
+    [err, resolved] = getFieldsFromInheritanceTree typeName, typeParentTree, typeclasses, {}
     return [err, null] if err
     resolvedInterfaces[typeName] = resolved
   return [null, resolvedInterfaces]
 
-getFieldsFromInheritanceTree = (typeclassName, inheritanceTree, typeclasses) ->
-  myTypeclassFields = getTypeclassFields typeclassName, typeclasses
+getParametersToExtendedTypeclass = (typeclassName, extendedTypeclassName, typeclasses) ->
+  extensionDeclarations = typeclasses[typeclassName].extends
+  for extension in extensionDeclarations
+    if utilities.isObject(extension) and utilities.getOnlyKeyForObject(extension) is extendedTypeclassName
+      return utilities.getOnlyValueForObject extension
+  return {}
+
+getParametersToTypeclassForType = (typeDeclaration, typeclassName) ->
+  #TODO remove duplication with above
+  typeclassDeclarations = typeDeclaration.typeclasses
+  for typeclass in typeclassDeclarations
+    if utilities.isObject(typeclass) and utilities.getOnlyKeyForObject(typeclass) is typeclassName
+      return utilities.getOnlyValueForObject typeclass
+  return {}
+
+getFieldsFromInheritanceTree = (typeclassName, inheritanceTree, typeclasses, typeParameters) ->
+  myUnresolvedFields = getTypeclassFields typeclassName, typeclasses
+  myTypeclassFields = resolveAllPossibleParameters myUnresolvedFields, typeParameters
   return [null, myTypeclassFields] if inheritanceTree is {}
 
   flattenedSiblingTrees = {}
 
-  for siblingName, siblingInheritanceTree of inheritanceTree
-    [err, siblingFields] = getFieldsFromInheritanceTree siblingName, siblingInheritanceTree, typeclasses
+  for extendedTypeclassName, extendedTypeclassInheritanceTree of inheritanceTree
+    parametersToExtendedTypeclass = getParametersToExtendedTypeclass typeclassName, extendedTypeclassName, typeclasses
+    console.log 'parametersToExtendedTypeclass: ', inspect parametersToExtendedTypeclass
+    parametersToExtendedTypeclass = resolveAllPossibleParameters parametersToExtendedTypeclass, typeParameters
+
+    [err, extendedTypeclassFields] = getFieldsFromInheritanceTree extendedTypeclassName, extendedTypeclassInheritanceTree, typeclasses, parametersToExtendedTypeclass
     return [err, null] if err
-    flattenedSiblingTrees[siblingName] = siblingFields
 
-  [err, mergedSiblingFields] = mergeSiblingFields flattenedSiblingTrees, typeclassName, typeclasses
+    flattenedSiblingTrees[extendedTypeclassName] = extendedTypeclassFields
 
-  [err, mergedFields] = mergeFieldsWithParent typeclassName, myTypeclassFields, mergedSiblingFields
+  [err, inheritedFields] = mergeSiblingFields flattenedSiblingTrees, typeclassName, typeclasses
 
-  return [err, mergedFields]
+  [err, myResolvedFields] = mergeFieldsWithParent typeclassName, myTypeclassFields, inheritedFields
+
+  return [err, myResolvedFields]
 
 mergeSiblingFields = (siblingFieldsObject) ->
   merged = {}
@@ -105,13 +132,26 @@ module.exports = (types, typeclasses) ->
     resolvedTypes[typeName] = typeData.fields
 
     if typeData.typeclasses
-      for typeclassName in typeData.typeclasses
+      for typeclass in typeData.typeclasses
+
+        typeclassName = if utilities.isString(typeclass) then typeclass else utilities.getOnlyKeyForObject typeclass
 
         addTypeToTypeclass typeName, typeclassName, resolvedTypeclasses, typeclassParentLists
 
-        if resolvedTypeclassFields[typeclassName]
-          for fieldName, fieldType of resolvedTypeclassFields[typeclassName]
-            resolvedTypes[typeName][fieldName] = fieldType
+        parametersForTypeclass = getParametersToTypeclassForType typeData, typeclassName
+
+        console.log 'parametersForTypeclass:' + inspect parametersForTypeclass, depth:null
+        console.log "resolvedTypeclassFields[#{typeclassName}]:" + inspect resolvedTypeclassFields[typeclassName], depth:null
+
+        mixedInFields = resolveAllPossibleParameters resolvedTypeclassFields[typeclassName], parametersForTypeclass
+
+        console.log 'mixedInFields:' + inspect mixedInFields, depth:null
+        console.log '\n\n'
+
+        for fieldName, fieldType of mixedInFields
+          console.log 'fieldType: ' + inspect fieldType
+          resolvedTypes[typeName] = {} unless resolvedTypes[typeName]?
+          resolvedTypes[typeName][fieldName] = fieldType
 
   return [null, {
     typefields: resolvedTypes

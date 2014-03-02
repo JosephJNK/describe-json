@@ -1,6 +1,8 @@
 
 {getOnlyValueForObject, getOnlyKeyForObject, beginsWithUpperCase, isString} = require './utilities'
 
+{inspect} = require 'util'
+
 isResolvedTypeName = (x) -> isString(x) and beginsWithUpperCase(x)
 isParameterName = (x) -> isString(x) and !beginsWithUpperCase(x)
 
@@ -38,6 +40,20 @@ selectResolvedFieldParameters = (fieldParameters, parentParameters, resolvedPara
       resolvedParameters[paramName] = fieldParameters[paramName]
     else
       resolvedParameters[paramName] = parentParameters[paramValue]
+
+resolveAllPossibleParameters = (fieldsObj, parameterArguments) ->
+  return {} if fieldsObj is undefined
+
+  results = {}
+  for fieldName, fieldValue of fieldsObj
+    if isString fieldValue
+      if isParameterName(fieldValue) and parameterArguments[fieldValue]?
+        results[fieldName] = parameterArguments[fieldValue]
+      else
+        results[fieldName] = fieldValue
+    else
+      results[fieldName] = resolveAllPossibleParameters fieldValue, parameterArguments
+  results
 
 module.exports =
 
@@ -81,3 +97,5 @@ module.exports =
     applyParametersFromFieldObject fieldDeclaration, parameterArguments, freeParameters, boundParameters
 
     [freeParameters, boundParameters]
+
+  resolveAllPossibleParameters: resolveAllPossibleParameters

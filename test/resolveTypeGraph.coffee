@@ -2,6 +2,8 @@ resolve = require '../src/resolveTypeGraph'
 typeSystem = require '../src/typeSystem'
 should = require 'should'
 
+{inspect} = require 'util'
+
 describe 'resolveTypeGraph', ->
 
   it 'should handle inherited fields', ->
@@ -34,8 +36,6 @@ describe 'resolveTypeGraph', ->
     [err, resolvedForms] = resolve system.types, system.typeclasses
     should.not.exist err
 
-    {inspect} = require 'util'
-
     resolvedForms.typefields.should.eql {
       'MemberType':
         ownField: 'Int'
@@ -47,3 +47,51 @@ describe 'resolveTypeGraph', ->
       'TypeclassWithField': [ 'MemberType' ]
       'ParentTypeclass': [ 'MemberType' ]
     }
+
+
+  it 'should let polymorphic fields be inherited from typeclasses', ->
+
+    parameterizedType = newtype:
+      name: 'ParameterizedType'
+      typeparameters: ['fieldParameter']
+      fields:
+        innerParameterized: 'fieldParameter'
+
+    wrapperTypeclass = newtypeclass:
+      name: 'WrapperTypeclass'
+      typeparameters: ['passedThroughParameter', 'ownParameter']
+      fields:
+        parameterizedField:
+          'ParameterizedType':
+            fieldParameter: 'passedThroughParameter'
+        polymorphicField: 'ownParameter'
+
+    outerType = newtype:
+      name: 'OuterType'
+      typeclasses: [ {
+        'WrapperTypeclass': { passedThroughParameter: 'String', ownParameter: 'Integer'}
+      } ]
+      fields:
+        ownField: 'Number'
+
+    system = typeSystem.init()
+    system.register parameterizedType
+    system.register wrapperTypeclass
+    system.register outerType
+
+    [err, resolvedForms] = resolve system.types, system.typeclasses
+    should.not.exist err
+
+    resolvedForms.typefields.OuterType.should.eql
+      ownField: 'Number'
+      parameterizedField:
+        'ParameterizedType':
+          fieldParameter: 'String'
+      polymorphicField: 'Integer'
+
+    resolvedForms.typeclassmembers.should.eql {
+      'WrapperTypeclass': [ 'OuterType' ]
+    }
+
+describe.skip '', ->
+  it 'should let polymorphic fields be passed through multiple layers of typeclasses', ->

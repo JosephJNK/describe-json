@@ -1,4 +1,5 @@
-{selectParametersForField, applyTypeParametersForField} = require '../src/parameterUtilities'
+{ selectParametersForField, applyTypeParametersForField, resolveAllPossibleParameters} = require '../src/parameterUtilities'
+
 should = require 'should'
 
 describe 'Field parameter resolution', ->
@@ -176,3 +177,68 @@ describe 'Field parameter resolution', ->
       freeParameters.should.eql ['paramArg']
       boundParameters.should.eql {}
 
+  describe 'trying to resolve parameters for fields', ->
+
+    it 'should resolve any parameters possible', ->
+
+      fieldsObject =
+        fieldOne: 'Integer'
+        fieldTwo: 'resolvable'
+        fieldThree: 'alsoResolvable'
+        fieldFour: 'unresolvable'
+
+      params =
+        resolvable: 'String'
+        alsoResolvable: 'SomeType'
+
+      resolved = resolveAllPossibleParameters fieldsObject, params
+
+      resolved.should.eql
+        fieldOne: 'Integer'
+        fieldTwo: 'String'
+        fieldThree: 'SomeType'
+        fieldFour: 'unresolvable'
+
+    it 'should resolve arguments to parameterized fields when possible', ->
+
+      fieldsObject =
+        fieldOne:
+          'AType':
+            first: 'resolvable'
+            second: 'unresolvable'
+            third: 'Integer'
+        fieldTwo:
+          'AnotherType':
+            first: 'resolvable'
+            second: 'alsoResolvable'
+            third: 'Number'
+
+      params =
+        resolvable: 'String'
+        alsoResolvable: 'SomeType'
+
+      resolved = resolveAllPossibleParameters fieldsObject, params
+
+      resolved.should.eql
+        fieldOne:
+          'AType':
+            first: 'String'
+            second: 'unresolvable'
+            third: 'Integer'
+        fieldTwo:
+          'AnotherType':
+            first: 'String'
+            second: 'SomeType'
+            third: 'Number'
+
+    it 'should return empty object if the fields its passed are undefined', ->
+
+      fieldsObject = undefined
+
+      params =
+        resolvable: 'String'
+        alsoResolvable: 'SomeType'
+
+      resolved = resolveAllPossibleParameters fieldsObject, params
+
+      resolved.should.eql {}

@@ -30,3 +30,5 @@ module.exports =
   checkType: checkType
 
   isString: (x) -> checkType.call(x) is '[object String]'
+
+  isObject: (x) -> checkType.call(x) is '[object Object]'

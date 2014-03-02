@@ -108,6 +108,8 @@ describe 'type parameters', ->
     secondMatched.typedata.fields.nonparameterizedField.iscontainer.should.eql false
 
 
+describe.skip 'waiting for resolveTypeGraph to produce parameterized types', ->
+
   it 'should let a typeclass contain a parametric type', ->
 
     console.log '----------------------------------------'
@@ -177,14 +179,10 @@ describe 'type parameters', ->
 
 describe.skip 'type parameters', ->
 
-
-  it 'should let a typclass contain parametric fields', ->
+  it 'should let a typclass pass parameters to a typeclass which it extends', ->
 
   it 'should allow parameters to be passed through multiple levels of wrappers', ->
 
-  it 'should handle fields with multiple type parameters', ->
+  it 'should let a field take multiple type parameters', ->
 
   it 'should have validations during registration', ->
-    true.should.eql false
-
-

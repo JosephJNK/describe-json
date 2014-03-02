@@ -1,4 +1,4 @@
-{checkType, isString} = require './utilities'
+{checkType, isString, isObject} = require './utilities'
 
 wrapNonContainer = (value, type) ->
   matched: true
@@ -50,7 +50,7 @@ module.exports =
       matched: false
 
   Object: (x) ->
-    matched = checkType.call(x) is '[object Object]'
+    matched = isObject x
     if matched
       matched: true
       data: x
