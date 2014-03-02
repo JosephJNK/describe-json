@@ -112,9 +112,6 @@ describe.skip 'waiting for resolveTypeGraph to produce parameterized types', ->
 
   it 'should let a typeclass contain a parametric type', ->
 
-    console.log '----------------------------------------'
-
-
     parameterizedType = newtype:
       name: 'ParameterizedType'
       typeparameters: ['fieldParameter']
@@ -177,12 +174,173 @@ describe.skip 'waiting for resolveTypeGraph to produce parameterized types', ->
     matched.typedata.fields.floatField.iscontainer.should.eql false
 
 
-describe.skip 'type parameters', ->
-
   it 'should let a typclass pass parameters to a typeclass which it extends', ->
+    outerTypeclassA = newtypeclass:
+      name: 'OuterTypeclassA'
+      typeparameters: ['aParameter']
+      fields:
+        aField: 'aParameter'
+
+    outerTypeclassB = newtypeclass:
+      name: 'OuterTypeclassB'
+      typeparameters: ['bParameter']
+      fields:
+        bField: 'bParameter'
+
+    innerTypeclass = newtypeclass:
+      name: 'InnerTypeclass'
+      extends: [
+        {'OuterTypeclassA': aParameter: 'innerParam'},
+        {'OuterTypeclassB': bParameter: 'innerParam'}
+      ]
+      typeparameters: ['innerParam']
+
+    aType = newtype:
+      name: 'AType'
+      typeclasses: [ {
+        'InnerTypeclass': { innerParam: 'Integer'}
+      } ]
+
+    data =
+      aField: 1
+      bField: 2
+
+    system = typeSystem.init()
+    system.register outerTypeclassA
+    system.register outerTypeclassB
+    system.register innerTypeclass
+    system.register aType
+    recognize = recognizer.init system
+
+    matched = recognize 'AType', data
+
+    matched.matched.should.eql true
+    matched.data.should.eql firstData
+    matched.typedata.type.should.eql 'AType'
+    matched.typedata.typeparameters.should.eql {}
+    matched.typedata.iscontainer.should.eql true
+
+    matched.typedata.fields.aField.type.should.eql 'Integer'
+    matched.typedata.fields.aField.typeparameters.should.eql {}
+    matched.typedata.fields.aField.iscontainer.should.eql false
+
+    matched.typedata.fields.bField.type.should.eql 'Integer'
+    matched.typedata.fields.bField.typeparameters.should.eql {}
+    matched.typedata.fields.bField.iscontainer.should.eql false
+
 
   it 'should allow parameters to be passed through multiple levels of wrappers', ->
 
+    mostOuterTypeclass = newtypeclass:
+      name: 'MostOuterTypeclass'
+      typeparameters: ['mostOuterParam']
+      fields:
+        typeclassField: 'mostOuterParam'
+
+    middleTypeclass = newtypeclass:
+      name: 'MiddleTypeclass'
+      typeparameters: ['middleParam']
+      extends: [{'MostOuterTypeclass': 'mostOuterParam': 'middleParam'}]
+
+    innerTypeclass = newtypeclass:
+      name: 'InnerTypeclass'
+      typeparameter: ['innerParam']
+      extends: [{'MiddleTypeclass': 'middleParam': 'innerParam'}]
+
+    mostOuterType = newtype:
+      name: 'MostOuterType'
+      typeclasses: [{'InnerTypeclass': 'Integer'}]
+      fields:
+        outerWrappedField:
+          'MiddleType':
+            'middleParameter': 'String'
+            'middleTypeclassParameter': 'Float'
+
+    middleType = newtype:
+      name: 'MiddleType'
+      typeParameters: ['middleParameter', 'middleTypeclassParameter']
+      fields:
+        middleWrappedField:
+          'InnerType':
+            'innerParameter': 'middleParameter'
+            'innerTypeclassParameter': 'middleTypeclassParameter'
+
+    innerType = newtype:
+      name: 'InnerType'
+      typeclasses: [{'InnerTypeclass': innerParam: 'innerTypeclassParameter'}]
+      typeParameters: ['innerParameter', 'innerTypeclassParameter']
+      fields:
+        innerField: innerParameter
+
+    data =
+      typeclassField: 'Integer'
+      outerWrappedField:
+        middleWrappedField:
+          innerField: 'String'
+          typeclassField: 'Float'
+
+    system = typeSystem.init()
+    system.register mostOuterTypeclass
+    system.register middleTypeclass
+    system.register innerTypeclass
+    system.register outerType
+    system.register middleType
+    system.register innerType
+    recognize = recognizer.init system
+
+    matched = recognize 'OuterType', data
+
+    matched.matched.should.eql true
+    matched.data.should.eql firstData
+    matched.typedata.type.should.eql 'OuterType'
+    matched.typedata.typeparameters.should.eql {}
+    matched.typedata.iscontainer.should.eql true
+
+    outerFields = matched.typedata.fields
+
+    outerFields.typeclassField.type.should.eql 'Integer'
+    outerFields.typeclassField.typeparameters.should.eql {}
+    outerFields.typeclassField.iscontainer.should.eql false
+
+    outerFields.outerWrappedField.type.should.eql 'MiddleType'
+    outerFields.outerWrappedField.typeparameters.should.eql {middleParameter: 'String', middleTypeclassParameter: 'Float'}
+    outerFields.outerWrappedField.iscontainer.should.eql true
+
+    middleTypeData = outerFields.outerWrappedField.fields.middleField.
+
+    middleTypeData.type.should.eql 'MiddleType'
+    middleTypeData.typeparameters.should.eql {middleParameter: 'String', middleTypeclassParameter: 'Float'}
+    middleTypeData.iscontainer.should.eql true
+
+    innerTypeData = middleTypeData.fields.innerField
+
+    innerTypeData.type.should.eql 'InnerType'
+    innerTypeData.typeparameters.should.eql {innerParameter: 'String', innerTypeclassParameter: 'Float'}
+    innerTypeData.iscontainer.should.eql true
+
+    innerTypeData.fields.innerField.type.should.eql 'String'
+    innerTypeData.fields.innerField.typeparameters.should.eql {}
+    innerTypeData.fields.innerField.iscontainer.should.eql false
+
+    innerTypeData.fields.typeclassField.type.should.eql 'Float'
+    innerTypeData.fields.typeclassField.typeparameters.should.eql {}
+    innerTypeData.fields.typeclassField.iscontainer.should.eql false
+
+
+
+describe.skip 'type parameters', ->
+
+  it "should properly store a typeclass's type parameters in the metadata when a typeclass is explicitly recognized", ->
+    # if a typeclass is explicitly recognized, the type parameters it contains should be stored in the IR
+    # basically, a type that declares a field to be a typeclass with given parameters rather than a concrete type
+
+  it "should store the type parameters of a container type that's mixed in from a typeclass in the metadata", ->
+    # for when we mix in a custom parameterized type; the type parameters should be the ones declared by that time
+    # this lets us mix in a List<int>, for example
+
+  it 'should let you pass a typeclass as a type parameter', ->
+
   it 'should let a field take multiple type parameters', ->
+    # test combinations of concrete types and type parameters
 
   it 'should have validations during registration', ->
