@@ -4,11 +4,12 @@
   "description": "Declarative algebraic data types and pattern matching for JSON",
   "author": "Joseph Junker <joseph.jnk@gmail.com>",
   "dependencies": {
-    "coffee-script": "1.6.x",
+    "coffee-script": "1.6.x"
   },
   "devDependencies": {
     "mocha": "1.15.x",
-    "should": "2.1.x"
+    "should": "2.1.x",
+    "node-inspector": "x"
   },
   "engine": "node >= 10.22",
   "license": "MIT",

@@ -108,7 +108,6 @@ describe 'type parameters', ->
     secondMatched.typedata.fields.nonparameterizedField.iscontainer.should.eql false
 
 
-describe.skip 'waiting for resolveTypeGraph to produce parameterized types', ->
 
   it 'should let a typeclass contain a parametric type', ->
 
@@ -143,6 +142,7 @@ describe.skip 'waiting for resolveTypeGraph to produce parameterized types', ->
       floatField: 2.5
 
     system = typeSystem.init()
+    debugger
     system.register wrapperTypeclass
     system.register parameterizedType
     err = system.register outerType
@@ -244,7 +244,7 @@ describe.skip 'waiting for resolveTypeGraph to produce parameterized types', ->
 
     innerTypeclass = newtypeclass:
       name: 'InnerTypeclass'
-      typeparameter: ['innerParam']
+      typeparameters: ['innerParam']
       extends: [{'MiddleTypeclass': 'middleParam': 'innerParam'}]
 
     mostOuterType = newtype:
@@ -270,7 +270,7 @@ describe.skip 'waiting for resolveTypeGraph to produce parameterized types', ->
       typeclasses: [{'InnerTypeclass': innerParam: 'innerTypeclassParameter'}]
       typeParameters: ['innerParameter', 'innerTypeclassParameter']
       fields:
-        innerField: innerParameter
+        innerField: 'innerParameter'
 
     data =
       typeclassField: 'Integer'
@@ -283,7 +283,7 @@ describe.skip 'waiting for resolveTypeGraph to produce parameterized types', ->
     system.register mostOuterTypeclass
     system.register middleTypeclass
     system.register innerTypeclass
-    system.register outerType
+    system.register mostOuterType
     system.register middleType
     system.register innerType
     recognize = recognizer.init system
