@@ -130,8 +130,6 @@ describe 'resolveTypeGraph', ->
     [err, resolvedForms] = resolve system.types, system.typeclasses
     should.not.exist err
 
-    console.log "resolvedForms:\n#{inspect resolvedForms, depth: null}"
-
     resolvedForms.typefields.AType.should.eql
       aField: 'Integer'
       bField: 'Integer'
@@ -140,4 +138,3 @@ describe 'resolveTypeGraph', ->
       'OuterTypeclassA': [ 'AType' ]
       'OuterTypeclassB': [ 'AType' ]
       'InnerTypeclass': [ 'AType' ]
-

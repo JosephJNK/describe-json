@@ -6,6 +6,9 @@
 isResolvedTypeName = (x) -> isString(x) and beginsWithUpperCase(x)
 isParameterName = (x) -> isString(x) and !beginsWithUpperCase(x)
 
+# TODO: There is no way this should be as gnarly as it is... it's probably a symptom of a poorly defined interface
+#       Cleaning up and normalizing the ways these methods are called would probably allow this module to be simplified
+
 applyParametersFromFieldObject = (fieldObject, parameterArguments, freeParameters, boundParameters) ->
   for paramName, paramArgument of getOnlyValueForObject fieldObject
     if isResolvedTypeName paramArgument

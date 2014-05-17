@@ -6,6 +6,17 @@ utilities = require './utilities'
 # gives us all of our types, organized by the typeclasses they implement,
 # and all of the typeclasses, organized by the types that implement them
 
+
+######### utility methods ############
+extractTypeclassName = (parentNameOrObject) ->
+  return parentNameOrObject if utilities.isString parentNameOrObject
+  utilities.getOnlyKeyForObject parentNameOrObject
+
+getTypeclassFields = (typeclassName, typeclasses) ->
+  typeclasses[typeclassName].fields
+
+######################################
+
 resolveTypeclassFields = (typeclasses) ->
   [err, inheritanceTree] = createInheritanceTree typeclasses
   return [err, null, null] if err
@@ -14,15 +25,17 @@ resolveTypeclassFields = (typeclasses) ->
   parentLists = findTypeclassParents inheritanceTree
   return [null, resolvedFields, parentLists]
 
+# This flattens the inheritance tree into an array. It returns an object
+# Key: the name of a typeclass/interface
+# Value: an array of the interfaces that this interface extends
 findTypeclassParents = (inheritanceTree) ->
   parentLists = {}
   for typeName, typeTree of inheritanceTree
     parentLists[typeName] = utilities.getAllNonemptyNodesInTree typeTree
   parentLists
 
-# depth first search, to make sure that there's not a cycle in interface extensions
+# depth first search, to build up inheritance tree and make sure that there's not a cycle in interface extensions
 # i.e. If A extends B, B cannot extend A
-# This does something else too?
 dfs = (typeclasses, current, visited) ->
   currentTypeclassData = typeclasses[current]
   return [null, {}] unless currentTypeclassData?
@@ -41,10 +54,6 @@ dfs = (typeclasses, current, visited) ->
 
   [null, elements]
 
-extractTypeclassName = (parentNameOrObject) ->
-  return parentNameOrObject if utilities.isString parentNameOrObject
-  utilities.getOnlyKeyForObject parentNameOrObject
-
 #This makes a bunch of trees in an object
 #The object contains typeclass/interface names as keys, and their inheritance trees as values
 #The trees have the typclass/interface as a key, whose value is another object.
@@ -57,9 +66,6 @@ createInheritanceTree = (typeclasses) ->
     return [error, null] if error
     resolved[typeclassName] = typeclassTree
   return [null, resolved]
-
-getTypeclassFields = (typeclassName, typeclasses) ->
-  typeclasses[typeclassName].fields
 
 reduceInheritanceTrees = (inheritanceTree, typeclasses) ->
   resolvedInterfaces = {}
@@ -109,6 +115,9 @@ mergeSiblingFields = (siblingFieldsObject) ->
   merged = {}
   for typeclassName, fields of siblingFieldsObject
     for fieldName, fieldType of fields
+      # TODO: this should not trigger an error if the types are identical
+      #         It would be neat if one was a subset of the other (the same type with type constraints, or a more specific
+      #         typeclass), if we set this to the most specific type possible
       if merged[fieldName]?
         return ["Error: When resolving fields of #{typeclass}, multiple inherited types define #{fieldName}", null]
       merged[fieldName] = fieldType
@@ -118,6 +127,9 @@ mergeFieldsWithParent = (typeclassName, childFields, parentFields) ->
   merged = utilities.cloneFlatObject childFields
 
   for fieldName, fieldType of parentFields
+    # TODO: this should not trigger an error if the types are identical
+    #         It would be neat if one was a subset of the other (the same type with type constraints, or a more specific
+    #         typeclass), if we set this to the most specific type possible
     if merged[fieldName]?
       return ["Error: typeclass #{typeclassName} conflicts with parent's field #{fieldName}", null]
     merged[fieldName] = fieldType
@@ -155,7 +167,6 @@ module.exports = (types, typeclasses) ->
           resolvedTypes[typeName] = {} unless resolvedTypes[typeName]?
           resolvedTypes[typeName][fieldName] = fieldType
 
-  
   # typefields: keys are the type names, values are the fields that that type has, including mixins
   #   I think this does something with type parameters, maybe?
   # typeclassmembers: keys are typeclass names, values are arrays of type names, which belong to that typeclass

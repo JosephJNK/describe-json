@@ -13,7 +13,6 @@ describe 'recognizer', ->
           aField: 'Integer'
 
       err = system.register type
-      console.log err if err
 
       recognize = recognizer.init system
 

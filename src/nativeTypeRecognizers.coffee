@@ -7,6 +7,8 @@ wrapNonContainer = (value, type) ->
     type: type
     iscontainer: false
 
+# This contains the type recognizers for primitive types
+
 module.exports =
   Integer: (x) ->
     res = matched: x == +x && x == (x|0)

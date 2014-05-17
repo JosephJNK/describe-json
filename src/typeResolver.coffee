@@ -4,13 +4,9 @@
 
 {inspect} = require 'util'
 
-createLabelForField = (typeData, typeParameters) ->
+# TODO: This is pretty bad, it needs to be almost completely replaced. See Trello ticket
 
-  {inspect} = require 'util'
-  console.log '\n'
-  console.log "typeData: #{inspect typeData, depth:null}"
-  console.log "typeParameters: #{inspect typeParameters, depth:null}"
-  console.log '\n'
+createLabelForField = (typeData, typeParameters) ->
 
   fieldData = getOnlyValueForObject typeData
 
@@ -72,18 +68,11 @@ createLabelForPattern = (typeName) ->
 
 getFromCollectionByLabel = (label, collection) ->
   return ['Cannot look up an item with an unresolved name', null] unless label?.name?
-  #TODO: this is terrible. I'm beginning to consider removing the isparameterized field.
-  #Also this whole workflow is overly gnarly at this point.
   if label.isparameterized
-    console.log "got a parameterized type for #{label.name}"
-    #TODO: Expand this to be able to cache resolved parameterized types
     item = collection?.parameterized?[label.name]
-    console.log "item: #{inspect item}"
     if item? then [null, item] else ['No such item found', null]
   else
     item = collection?.unparameterized?[label.name]
-    console.log "got an unparameterized type for #{label.name}"
-    console.log "item: #{inspect item}"
     if item? then [null, item] else ['No such item found', null]
 
 addItemToLabelledCollection = (label, item, collection) ->
@@ -97,7 +86,6 @@ addItemToLabelledCollection = (label, item, collection) ->
   {name, isparameterized} = label
 
   if isparameterized
-    #TODO: Expand this to be able to cache resolved parameterized types
     collection.parameterized[name] = item
   else
     collection.unparameterized[name] = item

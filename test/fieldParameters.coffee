@@ -84,7 +84,6 @@ describe 'Field parameter resolution', ->
       [err, res] = selectParametersForField field, parentParameters
 
       {inspect} = require 'util'
-      console.log inspect res
 
       should.not.exist err
       res.typeArg.should.eql 'Number'

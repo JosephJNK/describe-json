@@ -1,9 +1,6 @@
-
 {createLabelForField, getParserForType, createLabelForType} = require './typeResolver'
 {getOnlyKeyForObject} = require './utilities'
 {selectParametersForField} = require './parameterUtilities'
-
-{inspect} = require 'util'
 
 nativeTypes = Object.keys require './nativeTypeRecognizers'
 
@@ -15,10 +12,12 @@ getNameAndTypeFromFieldObject = (x) ->
   [fieldName, fieldType]
 
 parseNested = (parsers, fieldLabel, dataToParse, typeParameters) ->
+  # TODO: get rid of labels
   [err, parser] = getParserForType fieldLabel, parsers
   throw err if err
   parser dataToParse, typeParameters
 
+# IR = intermediate representation
 packIR = (packedObj, fieldName, ir) ->
   packedObj.data[fieldName] = ir.data
   packedObj.typedata.fields[fieldName] = ir.typedata
@@ -26,12 +25,17 @@ packIR = (packedObj, fieldName, ir) ->
 recordUseOfUnresolvedType = (typeLabel) ->
   throw 'Attempted to parse an unresolved type'
 
+# This is probably poorly named. It takes an array of all the already existing parameters, and the declaration of
+# the type that we're making a parser for, and it returns a parser for that field.
+# Parsers take data, and any currently applied type parameters as arguments, and return an IR of the parsed data
+# This IR is not strictly necessary at the moment, but will be important for things like nested pattern matching, or
+# external libraries that interface with this one.
 parseFields = (parsers, typeDeclaration) ->
   (dataToParse, typeParameters) ->
 
-    console.log "typeDeclaration: #{inspect typeDeclaration, depth: null}"
-    console.log "typeParameters: #{inspect typeParameters, depth: null}"
-
+    # This is the schema used by the IR. Data and fields are recursive
+    # TODO: Data contains the exact input we were given on a match. It should contain only
+    # the matched fields (untyped extra fields should be stripped out)
     result =
       matched: true
       data: {}
@@ -49,23 +53,18 @@ parseFields = (parsers, typeDeclaration) ->
 
       fieldObj = {}
       fieldObj[fieldName] = fieldData
+      # TODO: Get rid of labels
       typeLabel = createLabelForField fieldObj, thisFieldsParams
-
-      console.log "fieldName: #{fieldName}"
-      console.log "thisFieldsParams: #{inspect thisFieldsParams, depth: null}"
-      console.log "typelabel: #{inspect typeLabel, depth: null}"
 
       return recordUseOfUnresolvedType typeLabel unless typeLabel.basetypeisresolved
 
+      # TODO: Get rid of labels
       if isNativeType typeLabel
         [err, parser] = getParserForType typeLabel, parsers
         throw err if err?
-        console.log "parsing #{typeLabel.name}"
         ir = parser dataToParse[fieldName]
       else
-        console.log 'going to parseNested'
         ir = parseNested parsers, typeLabel, dataToParse[fieldName], thisFieldsParams
-
 
       return matched: false unless ir.matched
       packIR result, fieldName, ir
