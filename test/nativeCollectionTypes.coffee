@@ -1,4 +1,3 @@
-recognizer = require '../src/recognizer'
 typeSystem = require '../src/typeSystem'
 
 describe 'recognizer', ->
@@ -6,7 +5,10 @@ describe 'recognizer', ->
   describe 'encountering native collections', ->
 
     it 'should recognize an Array', ->
-      recognize = recognizer.init typeSystem.init()
+      system = typeSystem.init()
+      system.generateParsers()
+      recognize = system.getRecognizer()
+
       parsed = recognize('Array', [])
 
       parsed.should.eql
@@ -27,7 +29,10 @@ describe 'recognizer', ->
       recognize('Array', {}).matched.should.eql false
 
     it 'should recognize an Object', ->
-      recognize = recognizer.init typeSystem.init()
+      system = typeSystem.init()
+      system.generateParsers()
+      recognize = system.getRecognizer()
+
       parsed = recognize('Object', {})
 
       parsed.should.eql

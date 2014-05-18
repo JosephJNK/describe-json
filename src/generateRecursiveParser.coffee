@@ -24,11 +24,12 @@ getNameAndTypeFromFieldObject = (x) ->
   fieldType = x[fieldName]
   [fieldName, fieldType]
 
-parseNested = (fieldTypeName, dataToParse, typeParameters, typeRegistry) ->
+parseNested = (fieldTypeName, dataToParse, typeParameters, typeRegistry, typeclassMembers) ->
   parser = typeRegistry.getParserByTypeName fieldTypeName
   if parser is null
     if typeRegistry.nameCorrespondsToTypeclass fieldTypeName
-      parser = makeTypeclassParser typeRegistry.getTypeclassDeclarationForName(fieldTypeName), typeRegistry
+      membersOfThisTypeclass = typeclassMembers[fieldTypeName]
+      parser = makeTypeclassParser membersOfThisTypeclass, typeRegistry
     else
       parser = parseFields typeRegistry.getTypeDeclarationForName(fieldTypeName), typeRegistry
   parser dataToParse, typeParameters
@@ -45,7 +46,7 @@ recordUseOfUnresolvedType = (typeName) ->
 # Parsers take data, and any currently applied type parameters as arguments, and return an IR of the parsed data
 # This IR is not strictly necessary at the moment, but will be important for things like nested pattern matching, or
 # external libraries that interface with this one.
-parseFields = (typeDeclaration, typeRegistry) ->
+parseFields = (typeDeclaration, typeRegistry, typeclassMembers) ->
   (dataToParse, typeParameters) ->
 
     # This is the schema used by the IR. Data and fields are recursive
@@ -76,16 +77,16 @@ parseFields = (typeDeclaration, typeRegistry) ->
         parser = typeRegistry.getParserByTypeName fieldTypeName
         ir = parser dataToParse[fieldName]
       else
-        ir = parseNested fieldTypeName, dataToParse[fieldName], thisFieldsParams, typeRegistry
+        ir = parseNested fieldTypeName, dataToParse[fieldName], thisFieldsParams, typeRegistry, typeclassMembers
 
       return matched: false unless ir.matched
       packIR result, fieldName, ir
 
     return result
 
-makeTypeclassParser = (parsers, typeclassMembers, typeRegistry) ->
+makeTypeclassParser = (membersOfThisTypeclass, typeRegistry) ->
   (dataToParse, typeParameters) ->
-    for typeName in typeclassMembers
+    for typeName in membersOfThisTypeclass
       parser = typeRegistry.getParserByTypeName typeName
       if parser is null
         parser = makeTypeclassParser typeRegistry.getTypeDeclarationForName(typeName), typeRegistry
@@ -96,7 +97,7 @@ makeTypeclassParser = (parsers, typeclassMembers, typeRegistry) ->
 generateParser = (declarationType, newType, typeclassMembers, typeRegistry) ->
   if declarationType is 'type'
     if newType.fields?
-      fieldsParser = parseFields newType, typeRegistry
+      fieldsParser = parseFields newType, typeRegistry, typeclassMembers
       return fieldsParser
 
   if declarationType is 'typeclass'

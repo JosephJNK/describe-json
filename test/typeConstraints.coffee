@@ -41,8 +41,8 @@ describe 'Constraints on type parameters', ->
         aField:
           string: 'foo'
 
-    matched = recognize 'OuterType', data
-    matched.should.eql true
+    recognized = recognize 'OuterType', data
+    recognized.matched.should.eql true
 
 
 #List of tests: test a valid and invalid declaration for each
