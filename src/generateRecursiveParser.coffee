@@ -1,4 +1,4 @@
-{getOnlyKeyForObject, beginsWithUpperCase} = require './utilities'
+{isString, getOnlyKeyForObject, beginsWithUpperCase} = require './utilities'
 {selectParametersForField} = require './parameterUtilities'
 
 nativeTypes = Object.keys require './nativeTypeRecognizers'
@@ -27,10 +27,10 @@ getNameAndTypeFromFieldObject = (x) ->
 parseNested = (fieldTypeName, dataToParse, typeParameters, typeRegistry) ->
   parser = typeRegistry.getParserByTypeName fieldTypeName
   if parser is null
-    if typeRegistry.nameCorrespondsToTypeclass typeName
-      parser = makeTypeclassParser typeRegistry.getTypeclassDeclarationForName(typeName), typeRegistry
+    if typeRegistry.nameCorrespondsToTypeclass fieldTypeName
+      parser = makeTypeclassParser typeRegistry.getTypeclassDeclarationForName(fieldTypeName), typeRegistry
     else
-      parser = parseFields typeRegistry.getTypeDeclarationForName(typeName), typeRegistry
+      parser = parseFields typeRegistry.getTypeDeclarationForName(fieldTypeName), typeRegistry
   parser dataToParse, typeParameters
 
 packIR = (packedObj, fieldName, ir) ->
@@ -73,7 +73,7 @@ parseFields = (typeDeclaration, typeRegistry) ->
       return recordUseOfUnresolvedType fieldTypeName unless fieldTypeName
 
       if isNativeType fieldTypeName
-        parser = typeRegistry.getParserByTypeName typeName
+        parser = typeRegistry.getParserByTypeName fieldTypeName
         ir = parser dataToParse[fieldName]
       else
         ir = parseNested fieldTypeName, dataToParse[fieldName], thisFieldsParams, typeRegistry

@@ -1,7 +1,6 @@
 module.exports =
-  init: (system) ->
+  init: (registry) ->
     (pattern, data) ->
-      registry = system.registry
       parser = registry.getParserByTypeName pattern
 
       if parser is null

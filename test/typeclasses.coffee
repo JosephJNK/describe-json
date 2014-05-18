@@ -1,6 +1,4 @@
-recognizer = require '../src/recognizer'
 typeSystem = require '../src/typeSystem'
-{inspect} = require 'util'
 
 describe 'typeclasses', ->
 
@@ -33,9 +31,8 @@ describe 'typeclasses', ->
     system.register innerTypeB
     system.register innerTypeclass
 
-    system.init()
-
-    recognize = recognizer.init system
+    system.generateParsers()
+    recognize = system.getRecognizer()
 
     matchedA = recognize 'OuterType', inner: {str: 'foo'}
 
@@ -80,7 +77,9 @@ describe 'typeclasses', ->
     system = typeSystem.init()
     system.register memberType
     system.register typeclass
-    recognize = recognizer.init system
+
+    system.generateParsers()
+    recognize = system.getRecognizer()
 
     matched = recognize "MemberType", {ownField: 0, classField: 'foo'}
 

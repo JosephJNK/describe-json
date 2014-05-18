@@ -33,7 +33,8 @@ describe 'Constraints on type parameters', ->
     error3 = system.register innerType
     should.not.exist error3
 
-    recognize = recognizer.init system
+    system.generateParsers()
+    recognize = system.getRecognizer()
 
     data =
       middleField:

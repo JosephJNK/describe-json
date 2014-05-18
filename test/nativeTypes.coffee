@@ -6,17 +6,21 @@ describe 'recognizer', ->
   describe 'error messages', ->
 
     it 'should tell you when you try to access an unregistered type', ->
-      recognize = recognizer.init typeSystem.init()
+      system = typeSystem.init()
+      system.generateParsers()
+      recognize = system.getRecognizer()
       try
         recognize 'Invalid', {}
       catch e
-        e.should.eql "Error: 'Invalid' could not be resolved to a type"
+        e.should.eql "Type Invalid wasn't registered!"
 
 
   describe 'basic types', ->
 
     it 'should recognize an Integer', ->
-      recognize = recognizer.init typeSystem.init()
+      system = typeSystem.init()
+      system.generateParsers()
+      recognize = system.getRecognizer()
 
       parsed = recognize('Integer', 3)
 
@@ -38,7 +42,9 @@ describe 'recognizer', ->
       recognize('Integer', {}).matched.should.eql false
 
     it 'should recognize a Float', ->
-      recognize = recognizer.init typeSystem.init()
+      system = typeSystem.init()
+      system.generateParsers()
+      recognize = system.getRecognizer()
       parsed = recognize('Float', 3.1)
 
       parsed.should.eql
@@ -59,7 +65,9 @@ describe 'recognizer', ->
       recognize('Float', {}).matched.should.eql false
 
     it 'should recognize a Number', ->
-      recognize = recognizer.init typeSystem.init()
+      system = typeSystem.init()
+      system.generateParsers()
+      recognize = system.getRecognizer()
       parsed = recognize('Number', 3.1)
 
       parsed.should.eql
@@ -88,7 +96,9 @@ describe 'recognizer', ->
       recognize('Number', {}).matched.should.eql false
 
     it 'should recognize a String', ->
-      recognize = recognizer.init typeSystem.init()
+      system = typeSystem.init()
+      system.generateParsers()
+      recognize = system.getRecognizer()
       parsed = recognize('String', '3')
 
       parsed.should.eql
@@ -109,7 +119,9 @@ describe 'recognizer', ->
       recognize('String', {}).matched.should.eql false
 
     it 'should recognize a NaN', ->
-      recognize = recognizer.init typeSystem.init()
+      system = typeSystem.init()
+      system.generateParsers()
+      recognize = system.getRecognizer()
 
       parsed = recognize('NaN', NaN)
 
@@ -130,7 +142,9 @@ describe 'recognizer', ->
       recognize('NaN', {}).matched.should.eql false
 
     it 'should recognize null', ->
-      recognize = recognizer.init typeSystem.init()
+      system = typeSystem.init()
+      system.generateParsers()
+      recognize = system.getRecognizer()
 
       parsed = recognize('Null', null)
 
@@ -151,7 +165,9 @@ describe 'recognizer', ->
       recognize('Null', {}).matched.should.eql false
 
     it 'should recognize undefined', ->
-      recognize = recognizer.init typeSystem.init()
+      system = typeSystem.init()
+      system.generateParsers()
+      recognize = system.getRecognizer()
 
       parsed = recognize('Undefined', undefined)
 

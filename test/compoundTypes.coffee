@@ -1,4 +1,3 @@
-recognizer = require '../src/recognizer'
 typeSystem = require '../src/typeSystem'
 
 describe 'recognizer', ->
@@ -14,7 +13,8 @@ describe 'recognizer', ->
 
       err = system.register type
 
-      recognize = recognizer.init system
+      system.generateParsers()
+      recognize = system.getRecognizer()
 
       recognized = recognize('IntegerField', {aField: 1})
 
@@ -40,7 +40,8 @@ describe 'recognizer', ->
 
       system.register type
 
-      recognize = recognizer.init system
+      system.generateParsers()
+      recognize = system.getRecognizer()
 
       recognized = recognize('ThreeFields', {intField: 1, stringField: '1', objectField: {foo: 2}})
 
@@ -75,7 +76,8 @@ describe 'recognizer', ->
       system.register outerType
       system.register innerType
 
-      recognize = recognizer.init system
+      system.generateParsers()
+      recognize = system.getRecognizer()
 
       recognized = recognize('Outer', {innerField: {intField: 0} })
 

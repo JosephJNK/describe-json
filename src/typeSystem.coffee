@@ -2,6 +2,8 @@ generateRecursiveParser = require './generateRecursiveParser'
 resolveTypeGraph = require './resolveTypeGraph'
 nativeTypeRecognizers = require './nativeTypeRecognizers'
 parserRegistry = require './typeRegistry'
+recognizer = require './recognizer'
+
 {isString, getOnlyKeyForObject} = require './utilities'
 
 # main file for the program, used to register new types and typeclasses
@@ -58,14 +60,18 @@ module.exports =
       registeredTypeclasses[name] = newtypeclass
       null
 
+    recognize = ->
+      throw "Cannot use recognize until generate parsers is called"
+
     return {
       register: (input) ->
         return registerType input if input.newtype?
         return registerTypeclass input if input.newtypeclass?
         return 'newtype or newtypeclass keywords must be used'
 
-      init: ->
+      generateParsers: ->
         registry = parserRegistry.init()
+        recognize = recognizer.init registry
 
         for nativeTypeName, parser of nativeTypeRecognizers
           registry.addTypeParser nativeTypeName, parser, false
@@ -75,12 +81,12 @@ module.exports =
         for typeclassName, typeclassData of registeredTypeclasses
           typeclassParser = generateRecursiveParser 'typeclass', typeclassData, typeclassMembers, registry
           isParametric = typeclassData.typeparameters? and typeclassData.typeparameters.length > 0
-          registry.addTypeDeclaration typeclassName, typeclassData
+          registry.addTypeclassDeclaration typeclassName, typeclassData
           registry.addTypeParser typeclassName, typeclassParser, isParametric
         for typeName, typeData of registeredTypes
           typeParser = generateRecursiveParser 'type', typeData, typeclassMembers, registry
           isParametric = typeData.typeparameters? and typeData.typeparameters.length > 0
-          registry.addTypeclassDeclaration typeclassName, typeclassData
+          registry.addTypeDeclaration typeName, typeData
           registry.addTypeParser typeName, typeParser, isParametric
 
       types: registeredTypes
@@ -88,4 +94,5 @@ module.exports =
       getDataForType: (type) -> return registeredTypes[type]
 
       recognizers: recognizers
+      getRecognizer: -> recognize
     }

@@ -12,17 +12,17 @@ module.exports =
     return {
       addTypeDeclaration: (name, declaration) ->
         if typeDeclarations[name]? or typeclassDeclarations[name]?
-          throw "Tried to add declaration for #{name}, but it has already been registered"
+          throw "Tried to add type declaration for #{name}, but it has already been registered"
         typeDeclarations[name] = declaration
 
       addTypeclassDeclaration: (name, declaration) ->
         if typeDeclarations[name]? or typeclassDeclarations[name]?
-          throw "Tried to add declaration for #{name}, but it has already been registered"
+          throw "Tried to add typeclass declaration for #{name}, but it has already been registered"
         typeclassDeclarations[name] = declaration
 
       addTypeParser: (name, parser, hasParameters) ->
         if unparameterizedTypes[name]? or parameterizedTypes[name]?
-          throw "Tried to register #{name} as a type, but it has already been registered"
+          throw "Tried to register parser for #{name}, but it has already been registered"
         if hasParameters
           parameterizedTypes.push name
         else

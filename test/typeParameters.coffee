@@ -51,7 +51,9 @@ describe 'type parameters', ->
     system.register numberOuterType
     system.register parameterizedType
     system.register stringOuterType
-    recognize = recognizer.init system
+
+    system.generateParsers()
+    recognize = system.getRecognizer()
 
     firstData =
       parameterizedField:
@@ -147,7 +149,9 @@ describe 'type parameters', ->
     system.register parameterizedType
     err = system.register outerType
     should.not.exist err
-    recognize = recognizer.init system
+
+    system.generateParsers()
+    recognize = system.getRecognizer()
 
     matched = recognize 'OuterType', data
 
@@ -210,7 +214,9 @@ describe 'type parameters', ->
     system.register outerTypeclassB
     system.register innerTypeclass
     system.register aType
-    recognize = recognizer.init system
+
+    system.generateParsers()
+    recognize = system.getRecognizer()
 
     matched = recognize 'AType', data
 
@@ -286,7 +292,9 @@ describe 'type parameters', ->
     system.register mostOuterType
     system.register middleType
     system.register innerType
-    recognize = recognizer.init system
+
+    system.generateParsers()
+    recognize = system.getRecognizer()
 
     matched = recognize 'OuterType', data
 
