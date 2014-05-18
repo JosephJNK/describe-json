@@ -1,9 +1,8 @@
 generateRecursiveParser = require './generateRecursiveParser'
 resolveTypeGraph = require './resolveTypeGraph'
 nativeTypeRecognizers = require './nativeTypeRecognizers'
+parserRegistry = require './typeRegistry'
 {isString, getOnlyKeyForObject} = require './utilities'
-
-{ addItemToLabelledCollection, createLabelForType, createLabelForTypeclass, createLabelForNativeType } = require './typeResolver'
 
 # main file for the program, used to register new types and typeclasses
 module.exports =
@@ -66,24 +65,23 @@ module.exports =
         return 'newtype or newtypeclass keywords must be used'
 
       init: ->
+        registry = parserRegistry.init()
 
         for nativeTypeName, parser of nativeTypeRecognizers
-          #TODO: get rid of labels
-          label = createLabelForNativeType nativeTypeName
-          addItemToLabelledCollection label, parser, recognizers
+          registry.addTypeParser nativeTypeName, parser, false
 
         [err, {typefields, typeclassmembers}] = resolveTypeGraph registeredTypes, registeredTypeclasses
         return err if err
         for typeclassName, typeclassData of registeredTypeclasses
-          #TODO: get rid of labels
-          typeclassLabel = createLabelForTypeclass typeclassName, typeclassData
-          typeclassParser = generateRecursiveParser 'typeclass', typeclassData, recognizers, typeclassMembers, registeredTypes
-          addItemToLabelledCollection typeclassLabel, typeclassParser, recognizers
+          typeclassParser = generateRecursiveParser 'typeclass', typeclassData, typeclassMembers, registry
+          isParametric = typeclassData.typeparameters? and typeclassData.typeparameters.length > 0
+          registry.addTypeDeclaration typeclassName, typeclassData
+          registry.addTypeParser typeclassName, typeclassParser, isParametric
         for typeName, typeData of registeredTypes
-          #TODO: get rid of labels
-          typeLabel = createLabelForType typeName, typeData
-          typeParser = generateRecursiveParser 'type', typeData, recognizers, typeclassMembers, registeredTypes
-          addItemToLabelledCollection typeLabel, typeParser, recognizers
+          typeParser = generateRecursiveParser 'type', typeData, typeclassMembers, registry
+          isParametric = typeData.typeparameters? and typeData.typeparameters.length > 0
+          registry.addTypeclassDeclaration typeclassName, typeclassData
+          registry.addTypeParser typeName, typeParser, isParametric
 
       types: registeredTypes
       typeclasses: registeredTypeclasses

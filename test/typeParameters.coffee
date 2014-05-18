@@ -344,3 +344,13 @@ describe.skip 'type parameters', ->
     # test combinations of concrete types and type parameters
 
   it 'should have validations during registration', ->
+
+  it 'should let you pass a type parameter to a field which is also parametric', ->
+    #This might exist already
+    
+    #something like
+    # typeParameters: ['aParam', 'anotherParam']
+    # fields:
+    #   foo:
+    #     aParam:
+    #       innerParam: anotherParam

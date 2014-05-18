@@ -1,28 +1,43 @@
-{createLabelForField, getParserForType, createLabelForType} = require './typeResolver'
-{getOnlyKeyForObject} = require './utilities'
+{getOnlyKeyForObject, beginsWithUpperCase} = require './utilities'
 {selectParametersForField} = require './parameterUtilities'
 
 nativeTypes = Object.keys require './nativeTypeRecognizers'
 
-isNativeType = (type) -> nativeTypes.indexOf(type.name) isnt -1
+isNativeType = (typeName) -> nativeTypes.indexOf(typeName) isnt -1
+
+#TODO: unit test this, probably move it to a utility
+getTypeNameForField = (fieldData, parameters) ->
+  if isString(fieldData) and beginsWithUpperCase fieldData
+    return fieldData
+  if isString(fieldData) and not beginsWithUpperCase fieldData
+    #TODO: I'm not sure of the schema of bound parameters, this might not work
+    return parameters[fieldData]
+
+  name = getOnlyKeyForObject fieldData
+  if beginsWithUpperCase name
+    return name
+  else
+    return parameters[name]
 
 getNameAndTypeFromFieldObject = (x) ->
   fieldName = getOnlyKeyForObject x
   fieldType = x[fieldName]
   [fieldName, fieldType]
 
-parseNested = (parsers, fieldLabel, dataToParse, typeParameters) ->
-  # TODO: get rid of labels
-  [err, parser] = getParserForType fieldLabel, parsers
-  throw err if err
+parseNested = (fieldTypeName, dataToParse, typeParameters, typeRegistry) ->
+  parser = typeRegistry.getParserByTypeName fieldTypeName
+  if parser is null
+    if typeRegistry.nameCorrespondsToTypeclass typeName
+      parser = makeTypeclassParser typeRegistry.getTypeclassDeclarationForName(typeName), typeRegistry
+    else
+      parser = parseFields typeRegistry.getTypeDeclarationForName(typeName), typeRegistry
   parser dataToParse, typeParameters
 
-# IR = intermediate representation
 packIR = (packedObj, fieldName, ir) ->
   packedObj.data[fieldName] = ir.data
   packedObj.typedata.fields[fieldName] = ir.typedata
 
-recordUseOfUnresolvedType = (typeLabel) ->
+recordUseOfUnresolvedType = (typeName) ->
   throw 'Attempted to parse an unresolved type'
 
 # This is probably poorly named. It takes an array of all the already existing parameters, and the declaration of
@@ -30,12 +45,14 @@ recordUseOfUnresolvedType = (typeLabel) ->
 # Parsers take data, and any currently applied type parameters as arguments, and return an IR of the parsed data
 # This IR is not strictly necessary at the moment, but will be important for things like nested pattern matching, or
 # external libraries that interface with this one.
-parseFields = (parsers, typeDeclaration) ->
+parseFields = (typeDeclaration, typeRegistry) ->
   (dataToParse, typeParameters) ->
 
     # This is the schema used by the IR. Data and fields are recursive
     # TODO: Data contains the exact input we were given on a match. It should contain only
     # the matched fields (untyped extra fields should be stripped out)
+    #
+    # Actually, we should probably take an argument specifying whether we should extract or reject extra fields
     result =
       matched: true
       data: {}
@@ -51,44 +68,38 @@ parseFields = (parsers, typeDeclaration) ->
 
       [err, thisFieldsParams] = selectParametersForField fieldData, typeParameters
 
-      fieldObj = {}
-      fieldObj[fieldName] = fieldData
-      # TODO: Get rid of labels
-      typeLabel = createLabelForField fieldObj, thisFieldsParams
+      fieldTypeName = getTypeNameForField fieldData, typeParameters
 
-      return recordUseOfUnresolvedType typeLabel unless typeLabel.basetypeisresolved
+      return recordUseOfUnresolvedType fieldTypeName unless fieldTypeName
 
-      # TODO: Get rid of labels
-      if isNativeType typeLabel
-        [err, parser] = getParserForType typeLabel, parsers
-        throw err if err?
+      if isNativeType fieldTypeName
+        parser = typeRegistry.getParserByTypeName typeName
         ir = parser dataToParse[fieldName]
       else
-        ir = parseNested parsers, typeLabel, dataToParse[fieldName], thisFieldsParams
+        ir = parseNested fieldTypeName, dataToParse[fieldName], thisFieldsParams, typeRegistry
 
       return matched: false unless ir.matched
       packIR result, fieldName, ir
 
     return result
 
-makeTypeclassParser = (parsers, typeclassMembers, types) ->
-  (dataToParse) ->
+makeTypeclassParser = (parsers, typeclassMembers, typeRegistry) ->
+  (dataToParse, typeParameters) ->
     for typeName in typeclassMembers
-      type = types[typeName]
-      typeLabel = createLabelForType typeName, type
-      [err, parser] = getParserForType typeLabel, parsers
-      throw err if err
-      ir = parser dataToParse
+      parser = typeRegistry.getParserByTypeName typeName
+      if parser is null
+        parser = makeTypeclassParser typeRegistry.getTypeDeclarationForName(typeName), typeRegistry
+      ir = parser dataToParse, typeParameters
       return ir if ir.matched
     return matched: false
 
-generateParser = (declarationType, newType, parsers, typeclassMembers, types) ->
+generateParser = (declarationType, newType, typeclassMembers, typeRegistry) ->
   if declarationType is 'type'
     if newType.fields?
-      fieldsParser = parseFields parsers, newType
+      fieldsParser = parseFields newType, typeRegistry
       return fieldsParser
 
   if declarationType is 'typeclass'
-    return makeTypeclassParser parsers, typeclassMembers[newType.name], types
+    return makeTypeclassParser typeclassMembers[newType.name], typeRegistry
 
 module.exports = generateParser
