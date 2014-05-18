@@ -2,6 +2,10 @@
 utilities = require './utilities'
 {resolveAllPossibleParameters} = require './parameterUtilities'
 
+# linerizes type graph
+# gives us all of our types, organized by the typeclasses they implement,
+# and all of the typeclasses, organized by the types that implement them
+
 resolveTypeclassFields = (typeclasses) ->
   [err, inheritanceTree] = createInheritanceTree typeclasses
   return [err, null, null] if err
@@ -16,6 +20,9 @@ findTypeclassParents = (inheritanceTree) ->
     parentLists[typeName] = utilities.getAllNonemptyNodesInTree typeTree
   parentLists
 
+# depth first search, to make sure that there's not a cycle in interface extensions
+# i.e. If A extends B, B cannot extend A
+# This does something else too?
 dfs = (typeclasses, current, visited) ->
   currentTypeclassData = typeclasses[current]
   return [null, {}] unless currentTypeclassData?
@@ -38,6 +45,11 @@ extractTypeclassName = (parentNameOrObject) ->
   return parentNameOrObject if utilities.isString parentNameOrObject
   utilities.getOnlyKeyForObject parentNameOrObject
 
+#This makes a bunch of trees in an object
+#The object contains typeclass/interface names as keys, and their inheritance trees as values
+#The trees have the typclass/interface as a key, whose value is another object.
+#   This object has all of the interfaces which this interface extends as keys. Their values are the inheritance trees of these interfaces
+#   Yes, this is a lot of duplication, but it's easier than trying to avoid the duplication. This only runs once at startup so we don't care about efficiency.
 createInheritanceTree = (typeclasses) ->
   resolved = {}
   for typeclassName, typeclassDefinition of typeclasses
@@ -72,25 +84,17 @@ getParametersToTypeclassForType = (typeDeclaration, typeclassName) ->
   return {}
 
 getFieldsFromInheritanceTree = (typeclassName, inheritanceTree, typeclasses, typeParameters) ->
-  console.log '\n\ntypeclassName:', typeclassName
-  console.log '\n\ntypeParameters:', typeParameters
   myUnresolvedFields = getTypeclassFields typeclassName, typeclasses
-  console.log "myUnresolvedFields:\n#{inspect myUnresolvedFields, depth:null}"
   myTypeclassFields = resolveAllPossibleParameters myUnresolvedFields, typeParameters
-  console.log "myTypeclassFields:\n#{inspect myTypeclassFields, depth:null}"
-  console.log '\n'
   return [null, myTypeclassFields] if inheritanceTree is {}
 
   flattenedSiblingTrees = {}
 
   for extendedTypeclassName, extendedTypeclassInheritanceTree of inheritanceTree
     parametersToExtendedTypeclass = getParametersToExtendedTypeclass typeclassName, extendedTypeclassName, typeclasses
-    console.log 'parametersToExtendedTypeclass: ', inspect parametersToExtendedTypeclass
     resolvedTypeclassParams = resolveAllPossibleParameters parametersToExtendedTypeclass, typeParameters
-    console.log 'resolvedTypeclassParams: ', inspect resolvedTypeclassParams
 
     [err, extendedTypeclassFields] = getFieldsFromInheritanceTree extendedTypeclassName, extendedTypeclassInheritanceTree, typeclasses, resolvedTypeclassParams
-    console.log 'extendedTypeclassFields:', inspect extendedTypeclassFields, depth:null
     return [err, null] if err
 
     flattenedSiblingTrees[extendedTypeclassName] = extendedTypeclassFields
@@ -145,20 +149,16 @@ module.exports = (types, typeclasses) ->
         addTypeToTypeclass typeName, typeclassName, resolvedTypeclasses, typeclassParentLists
 
         parametersForTypeclass = getParametersToTypeclassForType typeData, typeclassName
-
-        console.log 'parametersForTypeclass:' + inspect parametersForTypeclass, depth:null
-        console.log "resolvedTypeclassFields[#{typeclassName}]:" + inspect resolvedTypeclassFields[typeclassName], depth:null
-
         mixedInFields = resolveAllPossibleParameters resolvedTypeclassFields[typeclassName], parametersForTypeclass
 
-        console.log 'mixedInFields:' + inspect mixedInFields, depth:null
-        console.log '\n\n'
-
         for fieldName, fieldType of mixedInFields
-          console.log 'fieldType: ' + inspect fieldType
           resolvedTypes[typeName] = {} unless resolvedTypes[typeName]?
           resolvedTypes[typeName][fieldName] = fieldType
 
+  
+  # typefields: keys are the type names, values are the fields that that type has, including mixins
+  #   I think this does something with type parameters, maybe?
+  # typeclassmembers: keys are typeclass names, values are arrays of type names, which belong to that typeclass
   return [null, {
     typefields: resolvedTypes
     typeclassmembers: resolvedTypeclasses

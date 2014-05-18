@@ -5,11 +5,13 @@ nativeTypeRecognizers = require './nativeTypeRecognizers'
 
 { addItemToLabelledCollection, createLabelForType, createLabelForTypeclass, createLabelForNativeType } = require './typeResolver'
 
+# main file for the program, used to register new types and typeclasses
 module.exports =
   init: ->
     registeredTypes = {}
     registeredTypeclasses = {}
 
+    #holds parsers
     recognizers = {}
 
     typeclassMembers = {}
@@ -28,6 +30,7 @@ module.exports =
       return 'Typeclass names must begin with a capital letter' unless newtypeclass.name.match /^[A-Z]/
       null
 
+    #builds list of types which belong to each typeclass, as types are added
     addMemberTypes = (typeName, declaredTypeclasses) ->
       for typeclass in declaredTypeclasses
         if isString typeclass
@@ -65,16 +68,19 @@ module.exports =
       init: ->
 
         for nativeTypeName, parser of nativeTypeRecognizers
+          #TODO: get rid of labels
           label = createLabelForNativeType nativeTypeName
           addItemToLabelledCollection label, parser, recognizers
 
         [err, {typefields, typeclassmembers}] = resolveTypeGraph registeredTypes, registeredTypeclasses
         return err if err
         for typeclassName, typeclassData of registeredTypeclasses
+          #TODO: get rid of labels
           typeclassLabel = createLabelForTypeclass typeclassName, typeclassData
           typeclassParser = generateRecursiveParser 'typeclass', typeclassData, recognizers, typeclassMembers, registeredTypes
           addItemToLabelledCollection typeclassLabel, typeclassParser, recognizers
         for typeName, typeData of registeredTypes
+          #TODO: get rid of labels
           typeLabel = createLabelForType typeName, typeData
           typeParser = generateRecursiveParser 'type', typeData, recognizers, typeclassMembers, registeredTypes
           addItemToLabelledCollection typeLabel, typeParser, recognizers

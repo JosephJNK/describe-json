@@ -142,7 +142,7 @@ dispatch {floatField: 1.5}, [AType: aTypeMatched] # Will print the above
 
 dispatch {floatField: 'foo'}, [
   {AType: aTypeMatched},
-  {otherwise: -> console.log 'No matches'
+  {otherwise: -> console.log 'No matches'}
 ]
 ```
 Patterns occurring earlier in the dispatch list take precedence over patterns occuring later. The 'otherwise' pattern is matched if no earlier patterns match.
