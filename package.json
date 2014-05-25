@@ -3,17 +3,19 @@
   "version": "0.1.0",
   "description": "Declarative algebraic data types and pattern matching for JSON",
   "author": "Joseph Junker <joseph.jnk@gmail.com>",
-  "dependencies": {
-    "coffee-script": "1.6.x"
-  },
+  "dependencies": {},
   "devDependencies": {
     "mocha": "1.15.x",
     "should": "2.1.x",
-    "node-inspector": "x"
+    "node-inspector": "x",
+    "coffee-script": "1.7.x",
+    "gulp": "~3.6.2",
+    "gulp-coffee": "~1.4.3"
   },
   "engine": "node >= 10.22",
   "license": "MIT",
   "scripts": {
-    "test": "mocha"
+    "test": "gulp clean && gulp coffee && mocha",
+    "debug": "gulp clean && gulp coffee && mocha --debug-brk"
   }
 }

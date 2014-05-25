@@ -1,6 +1,6 @@
 should = require 'should'
-recognizer = require '../src/recognizer'
-typeSystem = require '../src/typeSystem'
+recognizer = require '../public/recognizer'
+typeSystem = require '../public/typeSystem'
 
 describe 'Constraints on type parameters', ->
 

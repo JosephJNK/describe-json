@@ -1,4 +1,4 @@
-{ selectParametersForField, applyTypeParametersForField, resolveAllPossibleParameters} = require '../src/parameterUtilities'
+{ selectParametersForField, applyTypeParametersForField, resolveAllPossibleParameters} = require '../public/parameterUtilities'
 
 should = require 'should'
 

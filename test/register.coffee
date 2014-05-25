@@ -1,4 +1,4 @@
-typeSystem = require '../src/typeSystem'
+typeSystem = require '../public/typeSystem'
 should = require 'should'
 
 describe 'typeSystem', ->

@@ -22,10 +22,9 @@ module.exports =
     res = matched: checkType.call(x) is '[object Number]' and not isNaN x
     if res.matched then wrapNonContainer(x, 'Number') else res
 
-  String:
-    (x) ->
-      res = matched: isString x
-      if res.matched then wrapNonContainer(x, 'String') else res
+  String: (x) ->
+    res = matched: isString x
+    if res.matched then wrapNonContainer(x, 'String') else res
 
   NaN: (x) ->
     res = matched: checkType.call(x) is '[object Number]' and isNaN x

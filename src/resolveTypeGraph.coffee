@@ -6,16 +6,12 @@ utilities = require './utilities'
 # gives us all of our types, organized by the typeclasses they implement,
 # and all of the typeclasses, organized by the types that implement them
 
-
-######### utility methods ############
 extractTypeclassName = (parentNameOrObject) ->
   return parentNameOrObject if utilities.isString parentNameOrObject
   utilities.getOnlyKeyForObject parentNameOrObject
 
 getTypeclassFields = (typeclassName, typeclasses) ->
   typeclasses[typeclassName].fields
-
-######################################
 
 resolveTypeclassFields = (typeclasses) ->
   [err, inheritanceTree] = createInheritanceTree typeclasses

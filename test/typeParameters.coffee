@@ -1,5 +1,5 @@
-recognizer = require '../src/recognizer'
-typeSystem = require '../src/typeSystem'
+recognizer = require '../public/recognizer'
+typeSystem = require '../public/typeSystem'
 should = require 'should'
 
 {inspect} = require 'util'
@@ -144,9 +144,9 @@ describe 'type parameters', ->
       floatField: 2.5
 
     system = typeSystem.init()
-    debugger
     system.register wrapperTypeclass
     system.register parameterizedType
+    debugger
     err = system.register outerType
     should.not.exist err
 

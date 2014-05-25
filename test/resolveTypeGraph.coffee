@@ -1,5 +1,5 @@
-resolve = require '../src/resolveTypeGraph'
-typeSystem = require '../src/typeSystem'
+resolve = require '../public/resolveTypeGraph'
+typeSystem = require '../public/typeSystem'
 should = require 'should'
 
 {inspect} = require 'util'

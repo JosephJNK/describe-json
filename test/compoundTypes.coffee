@@ -1,9 +1,10 @@
-typeSystem = require '../src/typeSystem'
+typeSystem = require '../public/typeSystem'
 
 describe 'recognizer', ->
 
   describe 'compound types, ASTs', ->
     it 'should recognize an object with one Integer field', ->
+      debugger
       system = typeSystem.init()
 
       type = newtype:

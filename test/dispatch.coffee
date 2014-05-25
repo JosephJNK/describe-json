@@ -1,5 +1,5 @@
-typeSystem = require '../src/typeSystem'
-dispatcher = require '../src/dispatcher'
+typeSystem = require '../public/typeSystem'
+dispatcher = require '../public/dispatcher'
 
 describe 'dispatch', ->
 
