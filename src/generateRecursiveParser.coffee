@@ -96,9 +96,8 @@ makeTypeclassParser = (membersOfThisTypeclass, typeRegistry) ->
 
 generateParser = (declarationType, newType, typeclassMembers, typeRegistry) ->
   if declarationType is 'type'
-    if newType.fields?
-      fieldsParser = parseFields newType, typeRegistry, typeclassMembers
-      return fieldsParser
+    fieldsParser = parseFields newType, typeRegistry, typeclassMembers
+    return fieldsParser
 
   if declarationType is 'typeclass'
     return makeTypeclassParser typeclassMembers[newType.name], typeRegistry

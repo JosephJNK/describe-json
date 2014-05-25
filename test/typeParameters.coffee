@@ -156,7 +156,7 @@ describe 'type parameters', ->
     matched = recognize 'OuterType', data
 
     matched.matched.should.eql true
-    matched.data.should.eql firstData
+    matched.data.should.eql data
     matched.typedata.type.should.eql 'OuterType'
     matched.typedata.typeparameters.should.eql {}
     matched.typedata.iscontainer.should.eql true
@@ -221,7 +221,7 @@ describe 'type parameters', ->
     matched = recognize 'AType', data
 
     matched.matched.should.eql true
-    matched.data.should.eql firstData
+    matched.data.should.eql data
     matched.typedata.type.should.eql 'AType'
     matched.typedata.typeparameters.should.eql {}
     matched.typedata.iscontainer.should.eql true
