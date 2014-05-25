@@ -146,13 +146,13 @@ describe 'type parameters', ->
     system = typeSystem.init()
     system.register wrapperTypeclass
     system.register parameterizedType
-    debugger
     err = system.register outerType
     should.not.exist err
 
     system.generateParsers()
     recognize = system.getRecognizer()
 
+    debugger
     matched = recognize 'OuterType', data
 
     matched.matched.should.eql true

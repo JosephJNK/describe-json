@@ -74,20 +74,18 @@ module.exports =
         recognize = recognizer.init registry
 
         for nativeTypeName, parser of nativeTypeRecognizers
-          registry.addTypeParser nativeTypeName, parser, false
+          registry.addParser nativeTypeName, parser, false
 
         [err, {typefields, typeclassmembers}] = resolveTypeGraph registeredTypes, registeredTypeclasses
         return err if err
         for typeclassName, typeclassData of registeredTypeclasses
           typeclassParser = generateRecursiveParser 'typeclass', typeclassData, typeclassMembers, registry
-          isParametric = typeclassData.typeparameters? and typeclassData.typeparameters.length > 0
           registry.addTypeclassDeclaration typeclassName, typeclassData
-          registry.addTypeParser typeclassName, typeclassParser, isParametric
+          registry.addParser typeclassName, typeclassParser
         for typeName, typeData of registeredTypes
           typeParser = generateRecursiveParser 'type', typeData, typeclassMembers, registry
-          isParametric = typeData.typeparameters? and typeData.typeparameters.length > 0
           registry.addTypeDeclaration typeName, typeData
-          registry.addTypeParser typeName, typeParser, isParametric
+          registry.addParser typeName, typeParser
 
       types: registeredTypes
       typeclasses: registeredTypeclasses

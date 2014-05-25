@@ -1,10 +1,14 @@
 generateParser = require './generateRecursiveParser'
 
+#TODO: I don't think there needs to be any separation between parameterized and
+#unparameterized parsers, since a parser no longer closes over the type paramters
+#
+#This is causing problems.
+
 module.exports =
   init: ->
 
-    unparameterizedTypes = {}
-    parameterizedTypes = []
+    parsers = {}
 
     typeDeclarations = {}
     typeclassDeclarations = {}
@@ -20,21 +24,15 @@ module.exports =
           throw "Tried to add typeclass declaration for #{name}, but it has already been registered"
         typeclassDeclarations[name] = declaration
 
-      addTypeParser: (name, parser, hasParameters) ->
-        if unparameterizedTypes[name]? or parameterizedTypes[name]?
+      addParser: (name, parser) ->
+        if parsers[name]?
           throw "Tried to register parser for #{name}, but it has already been registered"
-        if hasParameters
-          parameterizedTypes.push name
-        else
-          unparameterizedTypes[name] = parser
+        parsers[name] = parser
 
       getParserByTypeName: (name) ->
-        if parameterizedTypes.indexOf(name) isnt -1
-          null
-        else
-          result = unparameterizedTypes[name]
-          throw "Type #{name} wasn't registered!" unless result?
-          result
+        result = parsers[name]
+        throw "Type #{name} wasn't registered!" unless result?
+        result
 
       getTypeDeclarationForName: (name) ->
         typeDeclarations[name]

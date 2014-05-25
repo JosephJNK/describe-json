@@ -4,7 +4,6 @@ describe 'recognizer', ->
 
   describe 'compound types, ASTs', ->
     it 'should recognize an object with one Integer field', ->
-      debugger
       system = typeSystem.init()
 
       type = newtype:
