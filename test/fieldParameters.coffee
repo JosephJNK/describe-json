@@ -83,8 +83,6 @@ describe 'Field parameter resolution', ->
 
       [err, res] = selectParametersForField field, parentParameters
 
-      {inspect} = require 'util'
-
       should.not.exist err
       res.typeArg.should.eql 'Number'
       res.staticParameter.should.eql 'String'

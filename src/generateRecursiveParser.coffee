@@ -24,12 +24,12 @@ getNameAndTypeFromFieldObject = (x) ->
   fieldType = x[fieldName]
   [fieldName, fieldType]
 
-parseNested = (fieldTypeName, dataToParse, typeParameters, typeRegistry, typeclassMembers) ->
+parseNested = (fieldTypeName, dataToParse, typeParameters, typeRegistry, interfaceMembers) ->
   parser = typeRegistry.getParserByTypeName fieldTypeName
   if parser is null
-    if typeRegistry.nameCorrespondsToTypeclass fieldTypeName
-      membersOfThisTypeclass = typeclassMembers[fieldTypeName]
-      parser = makeTypeclassParser membersOfThisTypeclass, typeRegistry
+    if typeRegistry.nameCorrespondsToInterface fieldTypeName
+      membersOfThisInterface = interfaceMembers[fieldTypeName]
+      parser = makeInterfaceParser membersOfThisInterface, typeRegistry
     else
       parser = parseFields typeRegistry.getTypeDeclarationForName(fieldTypeName), typeRegistry
   parser dataToParse, typeParameters
@@ -46,7 +46,7 @@ recordUseOfUnresolvedType = (typeName) ->
 # Parsers take data, and any currently applied type parameters as arguments, and return an IR of the parsed data
 # This IR is not strictly necessary at the moment, but will be important for things like nested pattern matching, or
 # external libraries that interface with this one.
-parseFields = (typeDeclaration, typeRegistry, typeclassMembers) ->
+parseFields = (typeDeclaration, typeRegistry, interfaceMembers) ->
   (dataToParse, typeParameters) ->
 
     # This is the schema used by the IR. Data and fields are recursive
@@ -77,29 +77,29 @@ parseFields = (typeDeclaration, typeRegistry, typeclassMembers) ->
         parser = typeRegistry.getParserByTypeName fieldTypeName
         ir = parser dataToParse[fieldName]
       else
-        ir = parseNested fieldTypeName, dataToParse[fieldName], thisFieldsParams, typeRegistry, typeclassMembers
+        ir = parseNested fieldTypeName, dataToParse[fieldName], thisFieldsParams, typeRegistry, interfaceMembers
 
       return matched: false unless ir.matched
       packIR result, fieldName, ir
 
     return result
 
-makeTypeclassParser = (membersOfThisTypeclass, typeRegistry) ->
+makeInterfaceParser = (membersOfThisInterface, typeRegistry) ->
   (dataToParse, typeParameters) ->
-    for typeName in membersOfThisTypeclass
+    for typeName in membersOfThisInterface
       parser = typeRegistry.getParserByTypeName typeName
       if parser is null
-        parser = makeTypeclassParser typeRegistry.getTypeDeclarationForName(typeName), typeRegistry
+        parser = makeInterfaceParser typeRegistry.getTypeDeclarationForName(typeName), typeRegistry
       ir = parser dataToParse, typeParameters
       return ir if ir.matched
     return matched: false
 
-generateParser = (declarationType, newType, typeclassMembers, typeRegistry) ->
+generateParser = (declarationType, newType, interfaceMembers, typeRegistry) ->
   if declarationType is 'type'
-    fieldsParser = parseFields newType, typeRegistry, typeclassMembers
+    fieldsParser = parseFields newType, typeRegistry, interfaceMembers
     return fieldsParser
 
-  if declarationType is 'typeclass'
-    return makeTypeclassParser typeclassMembers[newType.name], typeRegistry
+  if declarationType is 'interface'
+    return makeInterfaceParser interfaceMembers[newType.name], typeRegistry
 
 module.exports = generateParser

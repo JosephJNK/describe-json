@@ -42,46 +42,46 @@ newtype:
     int: 'Integer'
 ```
 
-## Typeclasses
+## Interfaces
 
-A typeclass specifies fields with given types that must exist on any type which is a member of the typeclass. Their syntax is similar to that of types:
+An interface specifies fields with given types that must exist on any type which is a member of the interface. Their syntax is similar to that of types:
 
 ```coffeescript
-newtypeclass:
-  name: 'SimpleTypeclass'
+newinterface:
+  name: 'SimpleInterface'
   fields:
     numberField: 'Number'
     
-# A typeclass doesn't have to have any fields
-newtypeclass
-  name: 'VerySimpleTypeclass'
+# An interface doesn't have to have any fields
+newinterface
+  name: 'VerySimpleInterface'
 ```
-A type specifies that it extends a typeclass with the 'typeclasses' field. A type that does so will have the fields of said typeclass mixed in to its definition.
+A type specifies that it extends an interface with the 'interfaces' field. A type that does so will have the fields of said interface mixed in to its definition.
 
 ```coffeescript
 newtype:
   name: 'IHaveTwoNumberFields'
-  typeclasses: ['SimpleTypeclass', 'VerySimpleTypeclass']
+  interfaces: ['SimpleInterface', 'VerySimpleInterface']
   fields:
     myOwnNumberField: 'Number'
 ```
-Typeclasses may also belong to typeclasses:
+Interfaces may also belong to interfaces:
 
 ```coffeescript
-newtypeclass:
+newinterface:
   name: 'StringAndNumberField'
-  typeclasses: ['SimpleTypeclass']
+  interfaces: ['SimpleInterface']
   fields:
     stringField: 'String'
 ```
-A type or typeclass which has a collision between fields mixed in by the typeclasses it implements will cause an error to be reported when describe-json is initialized. Later development work will try to refine this behavior, to only throw an error if the types are incompatible (i.e. if neither is a subset of the other.) Circular dependencies in typeclasses will result in an error being reported at initialization.
+A type or interface which has a collision between fields mixed in by the interfaces it implements will cause an error to be reported when describe-json is initialized. Later development work will try to refine this behavior, to only throw an error if the types are incompatible (i.e. if neither is a subset of the other.) Circular dependencies in interfaces will result in an error being reported at initialization.
 
-Types can use typeclasses as the type of one of their fields:
+Types can use interfaces as the type of one of their fields:
 ```coffeescript
 newtype:
   name: 'BasicPolymorphicType'
   fields:
-    objectContainingNumberField: 'SimpleTypeclass'
+    objectContainingNumberField: 'SimpleInterface'
 ```
 
 ## Type Parameters
@@ -111,7 +111,7 @@ newtype:
 ```
 'NumberType' describes an object with a field called 'parameterizedField', which itself contains a field called 'polymorphicField' containing a Number. 'StringType' has the same structure, but with 'polymorphicField' containing a String.
 
-Support for type parameters on typeclasses, and the use of a typeclass as a type parameter are being added as well.
+Support for type parameters on interfaces, and the use of an interface as a type parameter are being added as well.
 
 ## Initialization
 
@@ -132,7 +132,7 @@ dispatch = dispatcher.init system
 
 ## Pattern Matching
 
-Pattern matching is currently only supported on the names of types and typeclasses. Future development will focus on specifying field properties and type parameters in patterns.
+Pattern matching is currently only supported on the names of types and interfaces. Future development will focus on specifying field properties and type parameters in patterns.
 
 ```coffeescript
 

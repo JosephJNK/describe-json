@@ -11,18 +11,18 @@ module.exports =
     parsers = {}
 
     typeDeclarations = {}
-    typeclassDeclarations = {}
+    interfaceDeclarations = {}
 
     return {
       addTypeDeclaration: (name, declaration) ->
-        if typeDeclarations[name]? or typeclassDeclarations[name]?
+        if typeDeclarations[name]? or interfaceDeclarations[name]?
           throw "Tried to add type declaration for #{name}, but it has already been registered"
         typeDeclarations[name] = declaration
 
-      addTypeclassDeclaration: (name, declaration) ->
-        if typeDeclarations[name]? or typeclassDeclarations[name]?
-          throw "Tried to add typeclass declaration for #{name}, but it has already been registered"
-        typeclassDeclarations[name] = declaration
+      addInterfaceDeclaration: (name, declaration) ->
+        if typeDeclarations[name]? or interfaceDeclarations[name]?
+          throw "Tried to add interface declaration for #{name}, but it has already been registered"
+        interfaceDeclarations[name] = declaration
 
       addParser: (name, parser) ->
         if parsers[name]?
@@ -37,9 +37,9 @@ module.exports =
       getTypeDeclarationForName: (name) ->
         typeDeclarations[name]
 
-      getTypeclassDeclarationForName: (name) ->
-        typeclassDeclarations[name]
+      getInterfaceDeclarationForName: (name) ->
+        interfaceDeclarations[name]
 
-      nameCorrespondsToTypeclass: (name) ->
-        typeclassDeclarations[name]?
+      nameCorrespondsToInterface: (name) ->
+        interfaceDeclarations[name]?
     }
