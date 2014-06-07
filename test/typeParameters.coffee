@@ -152,7 +152,6 @@ describe 'type parameters', ->
     system.generateParsers()
     recognize = system.getRecognizer()
 
-    debugger
     matched = recognize 'OuterType', data
 
     matched.matched.should.eql true
@@ -227,11 +226,9 @@ describe 'type parameters', ->
     matched.typedata.iscontainer.should.eql true
 
     matched.typedata.fields.aField.type.should.eql 'Integer'
-    matched.typedata.fields.aField.typeparameters.should.eql {}
     matched.typedata.fields.aField.iscontainer.should.eql false
 
     matched.typedata.fields.bField.type.should.eql 'Integer'
-    matched.typedata.fields.bField.typeparameters.should.eql {}
     matched.typedata.fields.bField.iscontainer.should.eql false
 
 
@@ -296,7 +293,7 @@ describe 'type parameters', ->
     system.generateParsers()
     recognize = system.getRecognizer()
 
-    matched = recognize 'OuterType', data
+    matched = recognize 'MostOuterType', data
 
     matched.matched.should.eql true
     matched.data.should.eql firstData
