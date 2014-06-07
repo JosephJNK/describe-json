@@ -1,35 +1,35 @@
 typeSystem = require '../src/typeSystem'
 
-describe 'typeclasses', ->
+describe 'interfaces', ->
 
   it 'should allow for basic polymorphism', ->
 
     outerType = newtype:
       name: 'OuterType'
       fields:
-        inner: 'InnerTypeclass'
+        inner: 'InnerInterface'
 
     innerTypeA = newtype:
       name: 'InnerTypeA'
-      typeclasses: ['InnerTypeclass']
+      interfaces: ['InnerInterface']
       fields:
         str: 'String'
 
     innerTypeB = newtype:
       name: 'InnerTypeB'
-      typeclasses: ['InnerTypeclass']
+      interfaces: ['InnerInterface']
       fields:
         int: 'Integer'
 
-    innerTypeclass = newtypeclass:
-      name: 'InnerTypeclass'
+    innerInterface = newinterface:
+      name: 'InnerInterface'
 
     system = typeSystem.init()
 
     system.register outerType
     system.register innerTypeA
     system.register innerTypeB
-    system.register innerTypeclass
+    system.register innerInterface
 
     system.generateParsers()
     recognize = system.getRecognizer()
@@ -66,19 +66,19 @@ describe 'typeclasses', ->
     memberType =
       newtype:
         name: "MemberType"
-        typeclasses: ["TypeclassWithField"]
+        interfaces: ["InterfaceWithField"]
         fields:
           ownField: "Integer"
 
-    typeclass =
-      newtypeclass:
-        name: "TypeclassWithField"
+    interFace =
+      newinterface:
+        name: "InterfaceWithField"
         fields:
           classField: "String"
 
     system = typeSystem.init()
     system.register memberType
-    system.register typeclass
+    system.register interFace
 
     system.generateParsers()
     recognize = system.getRecognizer()

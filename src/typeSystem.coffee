@@ -6,11 +6,11 @@ recognizer = require './recognizer'
 
 {isString, getOnlyKeyForObject} = require './utilities'
 
-# main file for the program, used to register new types and typeclasses
+# main file for the program, used to register new types and interfaces
 module.exports =
   init: ->
     registeredTypes = {}
-    registeredTypeclasses = {}
+    registeredInterfaces = {}
 
     #holds parsers
     recognizers = {}
@@ -18,39 +18,39 @@ module.exports =
     validateNewType = (newtype) ->
       return 'Type must have a name' unless newtype.name?
       return "'#{newtype.name}' is already registered as a type" if registeredTypes[newtype.name]?
-      return "'#{newtype.name}' is already registered as a typeclass" if registeredTypeclasses[newtype.name]?
+      return "'#{newtype.name}' is already registered as a interface" if registeredInterfaces[newtype.name]?
       return 'Type names must begin with a capital letter' unless newtype.name.match /^[A-Z]/
       null
 
-    validateNewTypeClass = (newtypeclass) ->
-      return 'Typeclass must have a name' unless newtypeclass.name?
-      return "'#{newtypeclass.name}' is already registered as a typeclass" if registeredTypeclasses[newtypeclass.name]?
-      return "'#{newtypeclass.name}' is already registered as a type" if registeredTypes[newtypeclass.name]?
-      return 'Typeclass names must begin with a capital letter' unless newtypeclass.name.match /^[A-Z]/
+    validateNewInterface = (newinterface) ->
+      return 'Interface must have a name' unless newinterface.name?
+      return "'#{newinterface.name}' is already registered as a interface" if registeredInterfaces[newinterface.name]?
+      return "'#{newinterface.name}' is already registered as a type" if registeredTypes[newinterface.name]?
+      return 'Interface names must begin with a capital letter' unless newinterface.name.match /^[A-Z]/
       null
 
-    #builds list of types which belong to each typeclass, as types are added
-    addMemberTypes = (typeName, declaredTypeclasses) ->
-      for typeclass in declaredTypeclasses
-        if isString typeclass
-          typeclassName = typeclass
+    #builds list of types which belong to each interface, as types are added
+    addMemberTypes = (typeName, declaredInterfaces) ->
+      for interFace in declaredInterfaces
+        if isString interFace
+          interfaceName = interFace
         else
-          typeclassName = getOnlyKeyForObject typeclass
+          interfaceName = getOnlyKeyForObject interFace
 
     registerType = ({newtype}) ->
       err = validateNewType newtype
       return err if err?
       name = newtype.name
       registeredTypes[name] = newtype
-      if newtype.typeclasses?
-        addMemberTypes name, newtype.typeclasses
+      if newtype.interfaces?
+        addMemberTypes name, newtype.interfaces
       null
 
-    registerTypeclass = ({newtypeclass}) ->
-      err = validateNewTypeClass newtypeclass
+    registerInterface = ({newinterface}) ->
+      err = validateNewInterface newinterface
       return err if err?
-      name = newtypeclass.name
-      registeredTypeclasses[name] = newtypeclass
+      name = newinterface.name
+      registeredInterfaces[name] = newinterface
       null
 
     recognize = ->
@@ -59,8 +59,8 @@ module.exports =
     return {
       register: (input) ->
         return registerType input if input.newtype?
-        return registerTypeclass input if input.newtypeclass?
-        return 'newtype or newtypeclass keywords must be used'
+        return registerInterface input if input.newinterface?
+        return 'newtype or newinterface keywords must be used'
 
       generateParsers: ->
         registry = parserRegistry.init()
@@ -69,20 +69,21 @@ module.exports =
         for nativeTypeName, parser of nativeTypeRecognizers
           registry.addParser nativeTypeName, parser, false
 
-        [err, {typefields, typeclassmembers}] = resolveTypeGraph registeredTypes, registeredTypeclasses
+        [err, {typefields, interfacemembers}] = resolveTypeGraph registeredTypes, registeredInterfaces
         return err if err
-        for typeclassName, typeclassData of registeredTypeclasses
-          registry.addTypeclassDeclaration typeclassName, typeclassData
-          typeclassParser = generateRecursiveParser 'typeclass', typeclassData, typeclassmembers, registry
-          registry.addParser typeclassName, typeclassParser
+
+        for interfaceName, interfaceData of registeredInterfaces
+          registry.addInterfaceDeclaration interfaceName, interfaceData
+          interfaceParser = generateRecursiveParser 'interface', interfaceData, interfacemembers, registry
+          registry.addParser interfaceName, interfaceParser
         for typeName, typeData of registeredTypes
           registry.addTypeFields typeName, typefields[typeName]
           registry.addTypeDeclaration typeName, typeData
-          typeParser = generateRecursiveParser 'type', typeData, typeclassmembers, registry
+          typeParser = generateRecursiveParser 'type', typeData, interfacemembers, registry
           registry.addParser typeName, typeParser
 
       types: registeredTypes
-      typeclasses: registeredTypeclasses
+      interfaces: registeredInterfaces
       getDataForType: (type) -> return registeredTypes[type]
 
       recognizers: recognizers

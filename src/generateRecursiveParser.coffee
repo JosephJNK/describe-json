@@ -23,15 +23,15 @@ getNameAndTypeFromFieldObject = (x) ->
   fieldType = x[fieldName]
   [fieldName, fieldType]
 
-parseNested = (fieldTypeName, dataToParse, typeParameters, typeRegistry, typeclassMembers) ->
+parseNested = (fieldTypeName, dataToParse, typeParameters, typeRegistry, interfaceMembers) ->
   parser = typeRegistry.getParserByTypeName fieldTypeName
   if parser is null
-    if typeRegistry.nameCorrespondsToTypeclass fieldTypeName
-      membersOfThisTypeclass = typeclassMembers[fieldTypeName]
-      parser = makeTypeclassParser membersOfThisTypeclass, typeRegistry
+    if typeRegistry.nameCorrespondsToInterface fieldTypeName
+      membersOfThisInterface = interfaceMembers[fieldTypeName]
+      parser = makeInterfaceParser membersOfThisInterface, typeRegistry
     else
       fields = typeRegistry.getFieldsForType fieldTypeName
-      parser = parseFields fieldTypeName, fields, typeRegistry, typeclassMembers
+      parser = parseFields fieldTypeName, fields, typeRegistry, interfaceMembers
   parser dataToParse, typeParameters
 
 packIR = (packedObj, fieldName, ir) ->
@@ -46,7 +46,7 @@ recordUseOfUnresolvedType = (typeName) ->
 # Parsers take data, and any currently applied type parameters as arguments, and return an IR of the parsed data
 # This IR is not strictly necessary at the moment, but will be important for things like nested pattern matching, or
 # external libraries that interface with this one.
-parseFields = (typeName, typeFields, typeRegistry, typeclassMembers) ->
+parseFields = (typeName, typeFields, typeRegistry, interfaceMembers) ->
   (dataToParse, typeParameters) ->
 
     # This is the schema used by the IR. Data and fields are recursive
@@ -63,7 +63,6 @@ parseFields = (typeName, typeFields, typeRegistry, typeclassMembers) ->
         type: typeName
         fields: {}
 
-    #TODO: this needs to iterate over mixed in fields, not just those in the type declaration
     for fieldName, fieldData of typeFields
       fieldExists = dataToParse[fieldName]?
       return matched: false unless fieldExists
@@ -78,29 +77,29 @@ parseFields = (typeName, typeFields, typeRegistry, typeclassMembers) ->
         parser = typeRegistry.getParserByTypeName fieldTypeName
         ir = parser dataToParse[fieldName]
       else
-        ir = parseNested fieldTypeName, dataToParse[fieldName], thisFieldsParams, typeRegistry, typeclassMembers
+        ir = parseNested fieldTypeName, dataToParse[fieldName], thisFieldsParams, typeRegistry, interfaceMembers
 
       return matched: false unless ir.matched
       packIR result, fieldName, ir
 
     return result
 
-makeTypeclassParser = (membersOfThisTypeclass, typeRegistry) ->
+makeInterfaceParser = (membersOfThisInterface, typeRegistry) ->
   (dataToParse, typeParameters) ->
-    for typeName in membersOfThisTypeclass
+    for typeName in membersOfThisInterface
       parser = typeRegistry.getParserByTypeName typeName
       ir = parser dataToParse, typeParameters
       return ir if ir.matched
     return matched: false
 
-generateParser = (declarationType, typeDeclaration, typeclassMembers, typeRegistry) ->
+generateParser = (declarationType, typeDeclaration, interfaceMembers, typeRegistry) ->
   if declarationType is 'type'
     typeName = typeDeclaration.name
     typeFields = typeRegistry.getFieldsForType typeName
-    fieldsParser = parseFields typeName, typeFields, typeRegistry, typeclassMembers
+    fieldsParser = parseFields typeName, typeFields, typeRegistry, interfaceMembers
     return fieldsParser
 
-  if declarationType is 'typeclass'
-    return makeTypeclassParser typeclassMembers[typeDeclaration.name], typeRegistry
+  if declarationType is 'interface'
+    return makeInterfaceParser interfaceMembers[typeDeclaration.name], typeRegistry
 
 module.exports = generateParser

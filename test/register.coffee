@@ -15,14 +15,14 @@ describe 'typeSystem', ->
 
       Object.keys(system.types).should.includeEql type.newtype.name
 
-    it 'should register a typeclass', ->
-      typeClass = newtypeclass: name: 'Typeclass'
+    it 'should register a interface', ->
+      interFace = newinterface: name: 'Interface'
 
       system = typeSystem.init()
-      error = system.register typeClass
+      error = system.register interFace
       should.not.exist error
 
-      Object.keys(system.typeclasses).should.includeEql typeClass.newtypeclass.name
+      Object.keys(system.interfaces).should.includeEql interFace.newinterface.name
 
     it 'should not register the same name twice', ->
       type = newtype: name: 'Type'
@@ -35,30 +35,30 @@ describe 'typeSystem', ->
 
       system.register(type2).should.eql "'Type' is already registered as a type", "validation failed"
 
-      typeClass = newtypeclass: name: 'Typeclass'
-      typeClass2 = newtypeclass: name: 'Typeclass'
+      interFace = newinterface: name: 'Interface'
+      interFace2 = newinterface: name: 'Interface'
 
-      error2 = system.register typeClass
+      error2 = system.register interFace
       should.not.exist error2
 
-      system.register(typeClass2).should.eql "'Typeclass' is already registered as a typeclass"
+      system.register(interFace2).should.eql "'Interface' is already registered as a interface"
 
-      type3 = newtype: name: 'Typeclass'
-      system.register(type3).should.eql "'Typeclass' is already registered as a typeclass", "cross comparison failed"
+      type3 = newtype: name: 'Interface'
+      system.register(type3).should.eql "'Interface' is already registered as a interface", "cross comparison failed"
 
-      typeClass3 = newtypeclass: name: 'Type'
-      system.register(typeClass3).should.eql "'Type' is already registered as a type"
+      interFace3 = newinterface: name: 'Type'
+      system.register(interFace3).should.eql "'Type' is already registered as a type"
 
     it 'should enforce capitalization', ->
       type = newtype: name: 'type'
-      typeClass = newtypeclass: name: 'typeclass'
+      interFace = newinterface: name: 'interface'
       type2 = newtype: name: '1Type'
-      typeClass2 = newtypeclass: name: '1Typeclass'
+      interFace2 = newinterface: name: '1Interface'
       system = typeSystem.init()
       system.register(type).should.eql 'Type names must begin with a capital letter'
-      system.register(typeClass).should.eql 'Typeclass names must begin with a capital letter'
+      system.register(interFace).should.eql 'Interface names must begin with a capital letter'
       system.register(type2).should.eql 'Type names must begin with a capital letter'
-      system.register(typeClass2).should.eql 'Typeclass names must begin with a capital letter'
+      system.register(interFace2).should.eql 'Interface names must begin with a capital letter'
 
     it 'should let you register a type with Int fields', ->
       system = typeSystem.init()

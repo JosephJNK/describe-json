@@ -111,7 +111,7 @@ describe 'type parameters', ->
 
 
 
-  it 'should let a typeclass contain a parametric type', ->
+  it 'should let a interface contain a parametric type', ->
 
     parameterizedType = newtype:
       name: 'ParameterizedType'
@@ -120,8 +120,8 @@ describe 'type parameters', ->
         intField: 'Integer'
         innerParameterized: 'fieldParameter'
 
-    wrapperTypeclass = newtypeclass:
-      name: 'WrapperTypeclass'
+    wrapperInterface = newinterface:
+      name: 'WrapperInterface'
       typeparameters: ['passedThroughParameter', 'ownParameter']
       fields:
         parameterizedField:
@@ -132,8 +132,8 @@ describe 'type parameters', ->
 
     outerType = newtype:
       name: 'OuterType'
-      typeclasses: [ {
-        'WrapperTypeclass': { passedThroughParameter: 'String', ownParameter: 'Integer'}
+      interfaces: [ {
+        'WrapperInterface': { passedThroughParameter: 'String', ownParameter: 'Integer'}
       } ]
 
     data =
@@ -144,7 +144,7 @@ describe 'type parameters', ->
       floatField: 2.5
 
     system = typeSystem.init()
-    system.register wrapperTypeclass
+    system.register wrapperInterface
     system.register parameterizedType
     err = system.register outerType
     should.not.exist err
@@ -178,31 +178,31 @@ describe 'type parameters', ->
     matched.typedata.fields.floatField.iscontainer.should.eql false
 
 
-  it 'should let a typclass pass parameters to a typeclass which it extends', ->
-    outerTypeclassA = newtypeclass:
-      name: 'OuterTypeclassA'
+  it 'should let a typclass pass parameters to a interface which it extends', ->
+    outerInterfaceA = newinterface:
+      name: 'OuterInterfaceA'
       typeparameters: ['aParameter']
       fields:
         aField: 'aParameter'
 
-    outerTypeclassB = newtypeclass:
-      name: 'OuterTypeclassB'
+    outerInterfaceB = newinterface:
+      name: 'OuterInterfaceB'
       typeparameters: ['bParameter']
       fields:
         bField: 'bParameter'
 
-    innerTypeclass = newtypeclass:
-      name: 'InnerTypeclass'
+    innerInterface = newinterface:
+      name: 'InnerInterface'
       extends: [
-        {'OuterTypeclassA': aParameter: 'innerParam'},
-        {'OuterTypeclassB': bParameter: 'innerParam'}
+        {'OuterInterfaceA': aParameter: 'innerParam'},
+        {'OuterInterfaceB': bParameter: 'innerParam'}
       ]
       typeparameters: ['innerParam']
 
     aType = newtype:
       name: 'AType'
-      typeclasses: [ {
-        'InnerTypeclass': { innerParam: 'Integer'}
+      interfaces: [ {
+        'InnerInterface': { innerParam: 'Integer'}
       } ]
 
     data =
@@ -210,9 +210,9 @@ describe 'type parameters', ->
       bField: 2
 
     system = typeSystem.init()
-    system.register outerTypeclassA
-    system.register outerTypeclassB
-    system.register innerTypeclass
+    system.register outerInterfaceA
+    system.register outerInterfaceB
+    system.register innerInterface
     system.register aType
 
     system.generateParsers()
@@ -237,58 +237,58 @@ describe 'type parameters', ->
 
   it 'should allow parameters to be passed through multiple levels of wrappers', ->
 
-    mostOuterTypeclass = newtypeclass:
-      name: 'MostOuterTypeclass'
+    mostOuterInterface = newinterface:
+      name: 'MostOuterInterface'
       typeparameters: ['mostOuterParam']
       fields:
-        typeclassField: 'mostOuterParam'
+        interfaceField: 'mostOuterParam'
 
-    middleTypeclass = newtypeclass:
-      name: 'MiddleTypeclass'
+    middleInterface = newinterface:
+      name: 'MiddleInterface'
       typeparameters: ['middleParam']
-      extends: [{'MostOuterTypeclass': 'mostOuterParam': 'middleParam'}]
+      extends: [{'MostOuterInterface': 'mostOuterParam': 'middleParam'}]
 
-    innerTypeclass = newtypeclass:
-      name: 'InnerTypeclass'
+    innerInterface = newinterface:
+      name: 'InnerInterface'
       typeparameters: ['innerParam']
-      extends: [{'MiddleTypeclass': 'middleParam': 'innerParam'}]
+      extends: [{'MiddleInterface': 'middleParam': 'innerParam'}]
 
     mostOuterType = newtype:
       name: 'MostOuterType'
-      typeclasses: [{'InnerTypeclass': 'Integer'}]
+      interfaces: [{'InnerInterface': 'Integer'}]
       fields:
         outerWrappedField:
           'MiddleType':
             'middleParameter': 'String'
-            'middleTypeclassParameter': 'Float'
+            'middleInterfaceParameter': 'Float'
 
     middleType = newtype:
       name: 'MiddleType'
-      typeParameters: ['middleParameter', 'middleTypeclassParameter']
+      typeParameters: ['middleParameter', 'middleInterfaceParameter']
       fields:
         middleWrappedField:
           'InnerType':
             'innerParameter': 'middleParameter'
-            'innerTypeclassParameter': 'middleTypeclassParameter'
+            'innerInterfaceParameter': 'middleInterfaceParameter'
 
     innerType = newtype:
       name: 'InnerType'
-      typeclasses: [{'InnerTypeclass': innerParam: 'innerTypeclassParameter'}]
-      typeParameters: ['innerParameter', 'innerTypeclassParameter']
+      interfaces: [{'InnerInterface': innerParam: 'innerInterfaceParameter'}]
+      typeParameters: ['innerParameter', 'innerInterfaceParameter']
       fields:
         innerField: 'innerParameter'
 
     data =
-      typeclassField: 'Integer'
+      interfaceField: 'Integer'
       outerWrappedField:
         middleWrappedField:
           innerField: 'String'
-          typeclassField: 'Float'
+          interfaceField: 'Float'
 
     system = typeSystem.init()
-    system.register mostOuterTypeclass
-    system.register middleTypeclass
-    system.register innerTypeclass
+    system.register mostOuterInterface
+    system.register middleInterface
+    system.register innerInterface
     system.register mostOuterType
     system.register middleType
     system.register innerType
@@ -306,47 +306,47 @@ describe 'type parameters', ->
 
     outerFields = matched.typedata.fields
 
-    outerFields.typeclassField.type.should.eql 'Integer'
-    outerFields.typeclassField.typeparameters.should.eql {}
-    outerFields.typeclassField.iscontainer.should.eql false
+    outerFields.interfaceField.type.should.eql 'Integer'
+    outerFields.interfaceField.typeparameters.should.eql {}
+    outerFields.interfaceField.iscontainer.should.eql false
 
     outerFields.outerWrappedField.type.should.eql 'MiddleType'
-    outerFields.outerWrappedField.typeparameters.should.eql {middleParameter: 'String', middleTypeclassParameter: 'Float'}
+    outerFields.outerWrappedField.typeparameters.should.eql {middleParameter: 'String', middleInterfaceParameter: 'Float'}
     outerFields.outerWrappedField.iscontainer.should.eql true
 
     middleTypeData = outerFields.outerWrappedField.fields.middleField.
 
     middleTypeData.type.should.eql 'MiddleType'
-    middleTypeData.typeparameters.should.eql {middleParameter: 'String', middleTypeclassParameter: 'Float'}
+    middleTypeData.typeparameters.should.eql {middleParameter: 'String', middleInterfaceParameter: 'Float'}
     middleTypeData.iscontainer.should.eql true
 
     innerTypeData = middleTypeData.fields.innerField
 
     innerTypeData.type.should.eql 'InnerType'
-    innerTypeData.typeparameters.should.eql {innerParameter: 'String', innerTypeclassParameter: 'Float'}
+    innerTypeData.typeparameters.should.eql {innerParameter: 'String', innerInterfaceParameter: 'Float'}
     innerTypeData.iscontainer.should.eql true
 
     innerTypeData.fields.innerField.type.should.eql 'String'
     innerTypeData.fields.innerField.typeparameters.should.eql {}
     innerTypeData.fields.innerField.iscontainer.should.eql false
 
-    innerTypeData.fields.typeclassField.type.should.eql 'Float'
-    innerTypeData.fields.typeclassField.typeparameters.should.eql {}
-    innerTypeData.fields.typeclassField.iscontainer.should.eql false
+    innerTypeData.fields.interfaceField.type.should.eql 'Float'
+    innerTypeData.fields.interfaceField.typeparameters.should.eql {}
+    innerTypeData.fields.interfaceField.iscontainer.should.eql false
 
 
 
 describe.skip 'type parameters', ->
 
-  it "should properly store a typeclass's type parameters in the metadata when a typeclass is explicitly recognized", ->
-    # if a typeclass is explicitly recognized, the type parameters it contains should be stored in the IR
-    # basically, a type that declares a field to be a typeclass with given parameters rather than a concrete type
+  it "should properly store a interface's type parameters in the metadata when a interface is explicitly recognized", ->
+    # if a interface is explicitly recognized, the type parameters it contains should be stored in the IR
+    # basically, a type that declares a field to be a interface with given parameters rather than a concrete type
 
-  it "should store the type parameters of a container type that's mixed in from a typeclass in the metadata", ->
+  it "should store the type parameters of a container type that's mixed in from a interface in the metadata", ->
     # for when we mix in a custom parameterized type; the type parameters should be the ones declared by that time
     # this lets us mix in a List<int>, for example
 
-  it 'should let you pass a typeclass as a type parameter', ->
+  it 'should let you pass a interface as a type parameter', ->
 
   it 'should let a field take multiple type parameters', ->
     # test combinations of concrete types and type parameters

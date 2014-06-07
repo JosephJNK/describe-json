@@ -3,28 +3,28 @@ utilities = require './utilities'
 {resolveAllPossibleParameters} = require './parameterUtilities'
 
 # linerizes type graph
-# gives us all of our types, organized by the typeclasses they implement,
-# and all of the typeclasses, organized by the types that implement them
+# gives us all of our types, organized by the interfaces they implement,
+# and all of the interfaces, organized by the types that implement them
 
-extractTypeclassName = (parentNameOrObject) ->
+extractInterfaceName = (parentNameOrObject) ->
   return parentNameOrObject if utilities.isString parentNameOrObject
   utilities.getOnlyKeyForObject parentNameOrObject
 
-getTypeclassFields = (typeclassName, typeclasses) ->
-  typeclasses[typeclassName].fields
+getInterfaceFields = (interfaceName, interfaces) ->
+  interfaces[interfaceName].fields
 
-resolveTypeclassFields = (typeclasses) ->
-  [err, inheritanceTree] = createInheritanceTree typeclasses
+resolveInterfaceFields = (interfaces) ->
+  [err, inheritanceTree] = createInheritanceTree interfaces
   return [err, null, null] if err
-  [err, resolvedFields] = reduceInheritanceTrees inheritanceTree, typeclasses
+  [err, resolvedFields] = reduceInheritanceTrees inheritanceTree, interfaces
   return [err, null, null] if err
-  parentLists = findTypeclassParents inheritanceTree
+  parentLists = findInterfaceParents inheritanceTree
   return [null, resolvedFields, parentLists]
 
 # This flattens the inheritance tree into an array. It returns an object
-# Key: the name of a typeclass/interface
+# Key: the name of a interface/interface
 # Value: an array of the interfaces that this interface extends
-findTypeclassParents = (inheritanceTree) ->
+findInterfaceParents = (inheritanceTree) ->
   parentLists = {}
   for typeName, typeTree of inheritanceTree
     parentLists[typeName] = utilities.getAllNonemptyNodesInTree typeTree
@@ -32,132 +32,132 @@ findTypeclassParents = (inheritanceTree) ->
 
 # depth first search, to build up inheritance tree and make sure that there's not a cycle in interface extensions
 # i.e. If A extends B, B cannot extend A
-dfs = (typeclasses, current, visited) ->
-  currentTypeclassData = typeclasses[current]
-  return [null, {}] unless currentTypeclassData?
-  parentTypes = currentTypeclassData.extends
+dfs = (interfaces, current, visited) ->
+  currentInterfaceData = interfaces[current]
+  return [null, {}] unless currentInterfaceData?
+  parentTypes = currentInterfaceData.extends
   return [null, {}] unless parentTypes?
 
   elements = {}
 
   for parent in parentTypes
-    parentName = extractTypeclassName parent
+    parentName = extractInterfaceName parent
     return ['Cycle exists', null] unless visited.indexOf parentName is -1
     newVisited = visited.concat parentName
-    [err, parentTree] = dfs typeclasses, parentName, newVisited
+    [err, parentTree] = dfs interfaces, parentName, newVisited
     return [err, null] if err
     elements[parentName] = parentTree
 
   [null, elements]
 
 #This makes a bunch of trees in an object
-#The object contains typeclass/interface names as keys, and their inheritance trees as values
+#The object contains interface/interface names as keys, and their inheritance trees as values
 #The trees have the typclass/interface as a key, whose value is another object.
 #   This object has all of the interfaces which this interface extends as keys. Their values are the inheritance trees of these interfaces
 #   Yes, this is a lot of duplication, but it's easier than trying to avoid the duplication. This only runs once at startup so we don't care about efficiency.
-createInheritanceTree = (typeclasses) ->
+createInheritanceTree = (interfaces) ->
   resolved = {}
-  for typeclassName, typeclassDefinition of typeclasses
-    [error, typeclassTree] = dfs typeclasses, typeclassName, [typeclassName]
+  for interfaceName, interfaceDefinition of interfaces
+    [error, interfaceTree] = dfs interfaces, interfaceName, [interfaceName]
     return [error, null] if error
-    resolved[typeclassName] = typeclassTree
+    resolved[interfaceName] = interfaceTree
   return [null, resolved]
 
-reduceInheritanceTrees = (inheritanceTree, typeclasses) ->
+reduceInheritanceTrees = (inheritanceTree, interfaces) ->
   resolvedInterfaces = {}
   for typeName, typeParentTree of inheritanceTree
-    [err, resolved] = getFieldsFromInheritanceTree typeName, typeParentTree, typeclasses, {}
+    [err, resolved] = getFieldsFromInheritanceTree typeName, typeParentTree, interfaces, {}
     return [err, null] if err
     resolvedInterfaces[typeName] = resolved
   return [null, resolvedInterfaces]
 
-getParametersToExtendedTypeclass = (typeclassName, extendedTypeclassName, typeclasses) ->
-  extensionDeclarations = typeclasses[typeclassName].extends
+getParametersToExtendedInterface = (interfaceName, extendedInterfaceName, interfaces) ->
+  extensionDeclarations = interfaces[interfaceName].extends
   for extension in extensionDeclarations
-    if utilities.isObject(extension) and utilities.getOnlyKeyForObject(extension) is extendedTypeclassName
+    if utilities.isObject(extension) and utilities.getOnlyKeyForObject(extension) is extendedInterfaceName
       return utilities.getOnlyValueForObject extension
   return {}
 
-getParametersToTypeclassForType = (typeDeclaration, typeclassName) ->
-  typeclassDeclarations = typeDeclaration.typeclasses
-  for typeclass in typeclassDeclarations
-    if utilities.isObject(typeclass) and utilities.getOnlyKeyForObject(typeclass) is typeclassName
-      return utilities.getOnlyValueForObject typeclass
+getParametersToInterfaceForType = (typeDeclaration, interfaceName) ->
+  interfaceDeclarations = typeDeclaration.interfaces
+  for interFace in interfaceDeclarations
+    if utilities.isObject(interFace) and utilities.getOnlyKeyForObject(interFace) is interfaceName
+      return utilities.getOnlyValueForObject interFace
   return {}
 
-getFieldsFromInheritanceTree = (typeclassName, inheritanceTree, typeclasses, typeParameters) ->
-  myUnresolvedFields = getTypeclassFields typeclassName, typeclasses
-  myTypeclassFields = resolveAllPossibleParameters myUnresolvedFields, typeParameters
-  return [null, myTypeclassFields] if inheritanceTree is {}
+getFieldsFromInheritanceTree = (interfaceName, inheritanceTree, interfaces, typeParameters) ->
+  myUnresolvedFields = getInterfaceFields interfaceName, interfaces
+  myInterfaceFields = resolveAllPossibleParameters myUnresolvedFields, typeParameters
+  return [null, myInterfaceFields] if inheritanceTree is {}
 
   flattenedSiblingTrees = {}
 
-  for extendedTypeclassName, extendedTypeclassInheritanceTree of inheritanceTree
-    parametersToExtendedTypeclass = getParametersToExtendedTypeclass typeclassName, extendedTypeclassName, typeclasses
-    resolvedTypeclassParams = resolveAllPossibleParameters parametersToExtendedTypeclass, typeParameters
+  for extendedInterfaceName, extendedInterfaceInheritanceTree of inheritanceTree
+    parametersToExtendedInterface = getParametersToExtendedInterface interfaceName, extendedInterfaceName, interfaces
+    resolvedInterfaceParams = resolveAllPossibleParameters parametersToExtendedInterface, typeParameters
 
-    [err, extendedTypeclassFields] = getFieldsFromInheritanceTree extendedTypeclassName, extendedTypeclassInheritanceTree, typeclasses, resolvedTypeclassParams
+    [err, extendedInterfaceFields] = getFieldsFromInheritanceTree extendedInterfaceName, extendedInterfaceInheritanceTree, interfaces, resolvedInterfaceParams
     return [err, null] if err
 
-    flattenedSiblingTrees[extendedTypeclassName] = extendedTypeclassFields
+    flattenedSiblingTrees[extendedInterfaceName] = extendedInterfaceFields
 
-  [err, inheritedFields] = mergeSiblingFields flattenedSiblingTrees, typeclassName, typeclasses
+  [err, inheritedFields] = mergeSiblingFields flattenedSiblingTrees, interfaceName, interfaces
 
-  [err, myResolvedFields] = mergeFieldsWithParent typeclassName, myTypeclassFields, inheritedFields
+  [err, myResolvedFields] = mergeFieldsWithParent interfaceName, myInterfaceFields, inheritedFields
 
   return [err, myResolvedFields]
 
 mergeSiblingFields = (siblingFieldsObject) ->
   merged = {}
-  for typeclassName, fields of siblingFieldsObject
+  for interfaceName, fields of siblingFieldsObject
     for fieldName, fieldType of fields
       # TODO: this should not trigger an error if the types are identical
       #         It would be neat if one was a subset of the other (the same type with type constraints, or a more specific
-      #         typeclass), if we set this to the most specific type possible
+      #         interface), if we set this to the most specific type possible
       if merged[fieldName]?
-        return ["Error: When resolving fields of #{typeclass}, multiple inherited types define #{fieldName}", null]
+        return ["Error: When resolving fields of #{interfaceName}, multiple inherited types define #{fieldName}", null]
       merged[fieldName] = fieldType
   [null, merged]
 
-mergeFieldsWithParent = (typeclassName, childFields, parentFields) ->
+mergeFieldsWithParent = (interfaceName, childFields, parentFields) ->
   merged = utilities.cloneFlatObject childFields
 
   for fieldName, fieldType of parentFields
     # TODO: this should not trigger an error if the types are identical
     #         It would be neat if one was a subset of the other (the same type with type constraints, or a more specific
-    #         typeclass), if we set this to the most specific type possible
+    #         interface), if we set this to the most specific type possible
     if merged[fieldName]?
-      return ["Error: typeclass #{typeclassName} conflicts with parent's field #{fieldName}", null]
+      return ["Error: interface #{interfaceName} conflicts with parent's field #{fieldName}", null]
     merged[fieldName] = fieldType
   [null, merged]
 
-addTypeToTypeclass = (typeName, typeclassName, registry, typeclassParentLists) ->
-  registry[typeclassName] = [] unless registry[typeclassName]?
-  registry[typeclassName].push typeName if registry[typeclassName].indexOf typeName is -1
-  if typeclassParentLists[typeclassName]?
-    for typeclass in typeclassParentLists[typeclassName]
-      registry[typeclass] = [] unless registry[typeclass]?
-      registry[typeclass].push typeName if registry[typeclassName].indexOf typeName is -1
+addTypeToInterface = (typeName, interfaceName, registry, interfaceParentLists) ->
+  registry[interfaceName] = [] unless registry[interfaceName]?
+  registry[interfaceName].push typeName if registry[interfaceName].indexOf typeName is -1
+  if interfaceParentLists[interfaceName]?
+    for interFace in interfaceParentLists[interfaceName]
+      registry[interFace] = [] unless registry[interFace]?
+      registry[interFace].push typeName if registry[interfaceName].indexOf typeName is -1
 
-module.exports = (types, typeclasses) ->
+module.exports = (types, interfaces) ->
   resolvedTypes = {}
-  resolvedTypeclasses = {}
+  resolvedInterfaces = {}
 
-  [err, resolvedTypeclassFields, typeclassParentLists] = resolveTypeclassFields typeclasses
+  [err, resolvedInterfaceFields, interfaceParentLists] = resolveInterfaceFields interfaces
   return [err, null] if err
 
   for typeName, typeData of types
     resolvedTypes[typeName] = typeData.fields
 
-    if typeData.typeclasses
-      for typeclass in typeData.typeclasses
+    if typeData.interfaces
+      for interFace in typeData.interfaces
 
-        typeclassName = if utilities.isString(typeclass) then typeclass else utilities.getOnlyKeyForObject typeclass
+        interfaceName = if utilities.isString(interFace) then interFace else utilities.getOnlyKeyForObject interFace
 
-        addTypeToTypeclass typeName, typeclassName, resolvedTypeclasses, typeclassParentLists
+        addTypeToInterface typeName, interfaceName, resolvedInterfaces, interfaceParentLists
 
-        parametersForTypeclass = getParametersToTypeclassForType typeData, typeclassName
-        mixedInFields = resolveAllPossibleParameters resolvedTypeclassFields[typeclassName], parametersForTypeclass
+        parametersForInterface = getParametersToInterfaceForType typeData, interfaceName
+        mixedInFields = resolveAllPossibleParameters resolvedInterfaceFields[interfaceName], parametersForInterface
 
         for fieldName, fieldType of mixedInFields
           resolvedTypes[typeName] = {} unless resolvedTypes[typeName]?
@@ -165,8 +165,8 @@ module.exports = (types, typeclasses) ->
 
   # typefields: keys are the type names, values are the fields that that type has, including mixins
   #   I think this does something with type parameters, maybe?
-  # typeclassmembers: keys are typeclass names, values are arrays of type names, which belong to that typeclass
+  # interfacemembers: keys are interface names, values are arrays of type names, which belong to that interface
   return [null, {
     typefields: resolvedTypes
-    typeclassmembers: resolvedTypeclasses
+    interfacemembers: resolvedInterfaces
   }]

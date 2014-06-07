@@ -47,7 +47,7 @@ describe 'Constraints on type parameters', ->
 
 #List of tests: test a valid and invalid declaration for each
 #direct match (type A)
-#matches subclass (member of typeclass A)
+#matches subclass (member of interface A)
 #alternation (maybe call it 'or'?)
 #union (maybe call it 'and'?)
 #circular reference

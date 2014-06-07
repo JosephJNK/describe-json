@@ -11,29 +11,29 @@ describe 'resolveTypeGraph', ->
     memberType =
       newtype:
         name: 'MemberType'
-        typeclasses: ['TypeclassWithField']
+        interfaces: ['InterfaceWithField']
         fields:
           ownField: 'Int'
 
-    typeclassWithField =
-      newtypeclass:
-        name: 'TypeclassWithField'
-        extends: ['ParentTypeclass']
+    interfaceWithField =
+      newinterface:
+        name: 'InterfaceWithField'
+        extends: ['ParentInterface']
         fields:
           classField: 'String'
 
-    parentTypeclass =
-      newtypeclass:
-        name: 'ParentTypeclass'
+    parentInterface =
+      newinterface:
+        name: 'ParentInterface'
         fields:
           parentField: 'Number'
 
     system = typeSystem.init()
     system.register memberType
-    system.register typeclassWithField
-    system.register parentTypeclass
+    system.register interfaceWithField
+    system.register parentInterface
 
-    [err, resolvedForms] = resolve system.types, system.typeclasses
+    [err, resolvedForms] = resolve system.types, system.interfaces
     should.not.exist err
 
     resolvedForms.typefields.should.eql {
@@ -43,13 +43,13 @@ describe 'resolveTypeGraph', ->
         parentField: 'Number'
     }
 
-    resolvedForms.typeclassmembers.should.eql {
-      'TypeclassWithField': [ 'MemberType' ]
-      'ParentTypeclass': [ 'MemberType' ]
+    resolvedForms.interfacemembers.should.eql {
+      'InterfaceWithField': [ 'MemberType' ]
+      'ParentInterface': [ 'MemberType' ]
     }
 
 
-  it 'should let polymorphic fields be inherited from typeclasses', ->
+  it 'should let polymorphic fields be inherited from interfaces', ->
 
     parameterizedType = newtype:
       name: 'ParameterizedType'
@@ -57,8 +57,8 @@ describe 'resolveTypeGraph', ->
       fields:
         innerParameterized: 'fieldParameter'
 
-    wrapperTypeclass = newtypeclass:
-      name: 'WrapperTypeclass'
+    wrapperInterface = newinterface:
+      name: 'WrapperInterface'
       typeparameters: ['passedThroughParameter', 'ownParameter']
       fields:
         parameterizedField:
@@ -68,18 +68,18 @@ describe 'resolveTypeGraph', ->
 
     outerType = newtype:
       name: 'OuterType'
-      typeclasses: [ {
-        'WrapperTypeclass': { passedThroughParameter: 'String', ownParameter: 'Integer'}
+      interfaces: [ {
+        'WrapperInterface': { passedThroughParameter: 'String', ownParameter: 'Integer'}
       } ]
       fields:
         ownField: 'Number'
 
     system = typeSystem.init()
     system.register parameterizedType
-    system.register wrapperTypeclass
+    system.register wrapperInterface
     system.register outerType
 
-    [err, resolvedForms] = resolve system.types, system.typeclasses
+    [err, resolvedForms] = resolve system.types, system.interfaces
     should.not.exist err
 
     resolvedForms.typefields.OuterType.should.eql
@@ -89,52 +89,52 @@ describe 'resolveTypeGraph', ->
           fieldParameter: 'String'
       polymorphicField: 'Integer'
 
-    resolvedForms.typeclassmembers.should.eql {
-      'WrapperTypeclass': [ 'OuterType' ]
+    resolvedForms.interfacemembers.should.eql {
+      'WrapperInterface': [ 'OuterType' ]
     }
 
-  it 'should let typeclasses pass parameters to the typeclasses they extend', ->
+  it 'should let interfaces pass parameters to the interfaces they extend', ->
 
-    outerTypeclassA = newtypeclass:
-      name: 'OuterTypeclassA'
+    outerInterfaceA = newinterface:
+      name: 'OuterInterfaceA'
       typeparameters: ['aParameter']
       fields:
         aField: 'aParameter'
 
-    outerTypeclassB = newtypeclass:
-      name: 'OuterTypeclassB'
+    outerInterfaceB = newinterface:
+      name: 'OuterInterfaceB'
       typeparameters: ['bParameter']
       fields:
         bField: 'bParameter'
 
-    innerTypeclass = newtypeclass:
-      name: 'InnerTypeclass'
+    innerInterface = newinterface:
+      name: 'InnerInterface'
       extends: [
-        {'OuterTypeclassA': aParameter: 'innerParam'},
-        {'OuterTypeclassB': bParameter: 'innerParam'}
+        {'OuterInterfaceA': aParameter: 'innerParam'},
+        {'OuterInterfaceB': bParameter: 'innerParam'}
       ]
       typeparameters: ['innerParam']
 
     aType = newtype:
       name: 'AType'
-      typeclasses: [ {
-        'InnerTypeclass': { innerParam: 'Integer'}
+      interfaces: [ {
+        'InnerInterface': { innerParam: 'Integer'}
       } ]
 
     system = typeSystem.init()
-    system.register outerTypeclassA
-    system.register outerTypeclassB
-    system.register innerTypeclass
+    system.register outerInterfaceA
+    system.register outerInterfaceB
+    system.register innerInterface
     system.register aType
 
-    [err, resolvedForms] = resolve system.types, system.typeclasses
+    [err, resolvedForms] = resolve system.types, system.interfaces
     should.not.exist err
 
     resolvedForms.typefields.AType.should.eql
       aField: 'Integer'
       bField: 'Integer'
 
-    resolvedForms.typeclassmembers.should.eql
-      'OuterTypeclassA': [ 'AType' ]
-      'OuterTypeclassB': [ 'AType' ]
-      'InnerTypeclass': [ 'AType' ]
+    resolvedForms.interfacemembers.should.eql
+      'OuterInterfaceA': [ 'AType' ]
+      'OuterInterfaceB': [ 'AType' ]
+      'InnerInterface': [ 'AType' ]
