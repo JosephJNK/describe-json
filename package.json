@@ -15,6 +15,7 @@
   "engine": "node >= 10.22",
   "license": "MIT",
   "scripts": {
+    "build": "gulp clean && gulp coffee",
     "test": "gulp clean && gulp coffee && mocha",
     "debug": "gulp clean && gulp coffee && mocha --debug-brk"
   }

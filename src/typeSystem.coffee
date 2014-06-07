@@ -15,8 +15,6 @@ module.exports =
     #holds parsers
     recognizers = {}
 
-    typeclassMembers = {}
-
     validateNewType = (newtype) ->
       return 'Type must have a name' unless newtype.name?
       return "'#{newtype.name}' is already registered as a type" if registeredTypes[newtype.name]?
@@ -38,11 +36,6 @@ module.exports =
           typeclassName = typeclass
         else
           typeclassName = getOnlyKeyForObject typeclass
-
-        if typeclassMembers[typeclassName]?
-          typeclassMembers[typeclassName].push typeName
-        else
-          typeclassMembers[typeclassName] = [typeName]
 
     registerType = ({newtype}) ->
       err = validateNewType newtype
@@ -79,12 +72,13 @@ module.exports =
         [err, {typefields, typeclassmembers}] = resolveTypeGraph registeredTypes, registeredTypeclasses
         return err if err
         for typeclassName, typeclassData of registeredTypeclasses
-          typeclassParser = generateRecursiveParser 'typeclass', typeclassData, typeclassMembers, registry
           registry.addTypeclassDeclaration typeclassName, typeclassData
+          typeclassParser = generateRecursiveParser 'typeclass', typeclassData, typeclassmembers, registry
           registry.addParser typeclassName, typeclassParser
         for typeName, typeData of registeredTypes
-          typeParser = generateRecursiveParser 'type', typeData, typeclassMembers, registry
+          registry.addTypeFields typeName, typefields[typeName]
           registry.addTypeDeclaration typeName, typeData
+          typeParser = generateRecursiveParser 'type', typeData, typeclassmembers, registry
           registry.addParser typeName, typeParser
 
       types: registeredTypes

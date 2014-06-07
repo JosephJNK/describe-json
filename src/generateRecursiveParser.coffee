@@ -10,7 +10,6 @@ getTypeNameForField = (fieldData, parameters) ->
   if isString(fieldData) and beginsWithUpperCase fieldData
     return fieldData
   if isString(fieldData) and not beginsWithUpperCase fieldData
-    #TODO: I'm not sure of the schema of bound parameters, this might not work
     return parameters[fieldData]
 
   name = getOnlyKeyForObject fieldData
@@ -31,7 +30,8 @@ parseNested = (fieldTypeName, dataToParse, typeParameters, typeRegistry, typecla
       membersOfThisTypeclass = typeclassMembers[fieldTypeName]
       parser = makeTypeclassParser membersOfThisTypeclass, typeRegistry
     else
-      parser = parseFields typeRegistry.getTypeDeclarationForName(fieldTypeName), typeRegistry
+      fields = typeRegistry.getFieldsForType fieldTypeName
+      parser = parseFields fieldTypeName, fields, typeRegistry, typeclassMembers
   parser dataToParse, typeParameters
 
 packIR = (packedObj, fieldName, ir) ->
@@ -46,7 +46,7 @@ recordUseOfUnresolvedType = (typeName) ->
 # Parsers take data, and any currently applied type parameters as arguments, and return an IR of the parsed data
 # This IR is not strictly necessary at the moment, but will be important for things like nested pattern matching, or
 # external libraries that interface with this one.
-parseFields = (typeDeclaration, typeRegistry, typeclassMembers) ->
+parseFields = (typeName, typeFields, typeRegistry, typeclassMembers) ->
   (dataToParse, typeParameters) ->
 
     # This is the schema used by the IR. Data and fields are recursive
@@ -60,10 +60,11 @@ parseFields = (typeDeclaration, typeRegistry, typeclassMembers) ->
       typedata:
         typeparameters: if typeParameters? then typeParameters else {}
         iscontainer: true
-        type: typeDeclaration.name
+        type: typeName
         fields: {}
 
-    for fieldName, fieldData of typeDeclaration.fields
+    #TODO: this needs to iterate over mixed in fields, not just those in the type declaration
+    for fieldName, fieldData of typeFields
       fieldExists = dataToParse[fieldName]?
       return matched: false unless fieldExists
 
@@ -88,18 +89,18 @@ makeTypeclassParser = (membersOfThisTypeclass, typeRegistry) ->
   (dataToParse, typeParameters) ->
     for typeName in membersOfThisTypeclass
       parser = typeRegistry.getParserByTypeName typeName
-      if parser is null
-        parser = makeTypeclassParser typeRegistry.getTypeDeclarationForName(typeName), typeRegistry
       ir = parser dataToParse, typeParameters
       return ir if ir.matched
     return matched: false
 
-generateParser = (declarationType, newType, typeclassMembers, typeRegistry) ->
+generateParser = (declarationType, typeDeclaration, typeclassMembers, typeRegistry) ->
   if declarationType is 'type'
-    fieldsParser = parseFields newType, typeRegistry, typeclassMembers
+    typeName = typeDeclaration.name
+    typeFields = typeRegistry.getFieldsForType typeName
+    fieldsParser = parseFields typeName, typeFields, typeRegistry, typeclassMembers
     return fieldsParser
 
   if declarationType is 'typeclass'
-    return makeTypeclassParser typeclassMembers[newType.name], typeRegistry
+    return makeTypeclassParser typeclassMembers[typeDeclaration.name], typeRegistry
 
 module.exports = generateParser
