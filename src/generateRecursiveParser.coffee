@@ -1,27 +1,9 @@
 {isString, getOnlyKeyForObject, beginsWithUpperCase} = require './utilities'
-{selectParametersForField} = require './parameterUtilities'
+{selectParametersForField, getTypeNameForField} = require './parameterUtilities'
 
 nativeTypes = Object.keys require './nativeTypeRecognizers'
 
 isNativeType = (typeName) -> nativeTypes.indexOf(typeName) isnt -1
-
-#TODO: unit test this, probably move it to a utility
-getTypeNameForField = (fieldData, parameters) ->
-  if isString(fieldData) and beginsWithUpperCase fieldData
-    return fieldData
-  if isString(fieldData) and not beginsWithUpperCase fieldData
-    return parameters[fieldData]
-
-  name = getOnlyKeyForObject fieldData
-  if beginsWithUpperCase name
-    return name
-  else
-    return parameters[name]
-
-getNameAndTypeFromFieldObject = (x) ->
-  fieldName = getOnlyKeyForObject x
-  fieldType = x[fieldName]
-  [fieldName, fieldType]
 
 parseNested = (fieldTypeName, dataToParse, typeParameters, typeRegistry, interfaceMembers) ->
   parser = typeRegistry.getParserByTypeName fieldTypeName
@@ -64,8 +46,7 @@ parseFields = (typeName, typeFields, typeRegistry, interfaceMembers) ->
         fields: {}
 
     for fieldName, fieldData of typeFields
-      fieldExists = dataToParse[fieldName]?
-      return matched: false unless fieldExists
+      return matched: false unless dataToParse[fieldName]?
 
       [err, thisFieldsParams] = selectParametersForField fieldData, typeParameters
 

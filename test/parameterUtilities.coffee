@@ -1,5 +1,4 @@
-{ selectParametersForField, applyTypeParametersForField, resolveAllPossibleParameters} = require '../public/parameterUtilities'
-
+{ selectParametersForField, resolveAllPossibleParameters, getTypeNameForField} = require '../public/parameterUtilities'
 should = require 'should'
 
 describe 'Field parameter resolution', ->
@@ -89,92 +88,6 @@ describe 'Field parameter resolution', ->
         staticParameter: 'String'
         dynamicParameter: 'Float'
 
-
-  describe 'applying parameters', ->
-
-    it 'should select free and bound parameters for a field', ->
-
-      fieldData =
-        'ParameterizedType':
-          boundParam: 'paramArg'
-          staticParam: 'String'
-          freeParam: 'anotherArg'
-          anotherFreeParam: 'yetAnotherArg'
-
-      params =
-        paramArg: 'Number'
-        irrelevant: 'Integer'
-
-      [freeParameters, boundParameters] = applyTypeParametersForField fieldData, params
-
-      freeParameters.should.containEql 'freeParam'
-      freeParameters.should.containEql 'anotherFreeParam'
-
-      boundParameters.boundParam.should.eql 'Number'
-      boundParameters.staticParam.should.eql 'String'
-
-
-    it 'should be able to handle parameterized types', ->
-
-      parameterizedField =
-        'paramType':
-          fieldParameter: 'paramArg'
-          staticParam: 'String'
-          unresolved: 'unknown'
-
-      params =
-        paramType: 'SomeType'
-        paramArg: 'Number'
-        irrelevant: 'Integer'
-
-      [freeParameters, boundParameters] = applyTypeParametersForField parameterizedField, params
-
-      freeParameters.should.containEql 'unresolved'
-
-      boundParameters.should.match
-        paramType: 'SomeType'
-        staticParam: 'String'
-        fieldParameter: 'Number'
-
-    it 'should handle taking a static type string as input', ->
-
-      fieldData = 'String'
-
-      params =
-        paramArg: 'Number'
-        irrelevant: 'Integer'
-
-      [freeParameters, boundParameters] = applyTypeParametersForField fieldData, params
-
-      freeParameters.should.eql []
-      boundParameters.should.eql {}
-
-    it 'should handle taking a parameter name string as input', ->
-
-      fieldData = 'paramArg'
-
-      params =
-        paramArg: 'Number'
-        irrelevant: 'Integer'
-
-      [freeParameters, boundParameters] = applyTypeParametersForField fieldData, params
-
-      freeParameters.should.eql []
-      boundParameters.should.eql paramArg: 'Number'
-
-
-    it 'should handle taking an unresolvable parameter name string as input', ->
-
-      fieldData = 'paramArg'
-
-      params =
-        irrelevant: 'Integer'
-
-      [freeParameters, boundParameters] = applyTypeParametersForField fieldData, params
-
-      freeParameters.should.eql ['paramArg']
-      boundParameters.should.eql {}
-
   describe 'trying to resolve parameters for fields', ->
 
     it 'should resolve any parameters possible', ->
@@ -240,3 +153,67 @@ describe 'Field parameter resolution', ->
       resolved = resolveAllPossibleParameters fieldsObject, params
 
       resolved.should.eql {}
+
+  describe 'getTypeNameForField', ->
+    it 'should return the name of the field when given a field with a static type', ->
+      params = irrelevant: 'Number'
+      fieldData = 'String'
+
+      getTypeNameForField(fieldData, params).should.eql 'String'
+
+    it 'should apply a type parameter when given a parameterized field', ->
+      fieldData = 'aParam'
+      params = aParam: 'Number'
+
+      getTypeNameForField(fieldData, params).should.eql 'Number'
+
+    it 'should return null when it can\'t resolve a parameterized field', ->
+      fieldData = 'aParam'
+      params = aDifferentParam: 'Number'
+
+      should.not.exist getTypeNameForField fieldData, params
+
+    it 'should return null when a field resolves to a parameter', ->
+      fieldData = 'aParam'
+      params = aParam: 'anotherParam'
+
+      should.not.exist getTypeNameForField fieldData, params
+
+    it 'should return the name of the field when given a field with a static parameterized type', ->
+      fieldData = 'FieldType': fieldParam: 'fieldParamBinding'
+      params =
+        fieldParam: 'It would not make sense for this to be used'
+        fieldParamBinding: 'The type param that would get passed to this object during parsing'
+        irrelevant: 'Number'
+
+      getTypeNameForField(fieldData, params).should.eql 'FieldType'
+
+    it 'should apply a type parameter when given a dynamic parameterized field', ->
+      fieldData = someParam: fieldParam: 'fieldParamBinding'
+      params =
+        someParam: 'FieldType'
+        fieldParam: 'It would not make sense for this to be used'
+        fieldParamBinding: 'The type param that would get passed to this object during parsing'
+        irrelevant: 'Number'
+
+      getTypeNameForField(fieldData, params).should.eql 'FieldType'
+
+    it 'should return null when it can\'t resolve a parameterized field', ->
+      fieldData = someParam: fieldParam: 'fieldParamBinding'
+      params =
+        fieldParam: 'It would not make sense for this to be used'
+        fieldParamBinding: 'The type param that would get passed to this object during parsing'
+        irrelevant: 'Number'
+
+      should.not.exist getTypeNameForField fieldData, params
+
+    it 'should return null when a field resolves to a parameter', ->
+      fieldData = someParam: fieldParam: 'fieldParamBinding'
+      params =
+        someParam: 'anotherParameter'
+        fieldParam: 'It would not make sense for this to be used'
+        fieldParamBinding: 'The type param that would get passed to this object during parsing'
+        irrelevant: 'Number'
+
+
+      should.not.exist getTypeNameForField fieldData, params

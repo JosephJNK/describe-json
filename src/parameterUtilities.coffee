@@ -60,6 +60,7 @@ resolveAllPossibleParameters = (fieldsObj, parameterArguments) ->
 
 module.exports =
 
+  # binds as many parameters as possible to the declared field
   selectParametersForField: (fieldDeclaration, parentParameters) ->
     # resolvedParams are of the form parameterName: resolvedParameterValue
 
@@ -79,26 +80,21 @@ module.exports =
 
     return [null, resolvedParams]
 
-
-  applyTypeParametersForField: (fieldDeclaration, parameterArguments) ->
-    # freeParameters is a list of unresolved parameters
-    # boundParameters are of the form parameterName: resolvedParameterValue
-    freeParameters = []
-    boundParameters = {}
-
-    if isResolvedTypeName fieldDeclaration
-      return [freeParameters, boundParameters]
-
-    if isParameterName fieldDeclaration
-      applyFieldTypeAsParameter fieldDeclaration, parameterArguments, freeParameters, boundParameters
-      return [freeParameters, boundParameters]
-
-    fieldTypeName = getOnlyKeyForObject fieldDeclaration
-    if isParameterName fieldTypeName
-      applyFieldTypeAsParameter fieldTypeName, parameterArguments, freeParameters, boundParameters
-
-    applyParametersFromFieldObject fieldDeclaration, parameterArguments, freeParameters, boundParameters
-
-    [freeParameters, boundParameters]
-
   resolveAllPossibleParameters: resolveAllPossibleParameters
+
+  getTypeNameForField: (fieldData, parameters) ->
+    if isString(fieldData) and beginsWithUpperCase fieldData #The field is a static type
+      return fieldData
+    if isString(fieldData) and not beginsWithUpperCase fieldData #The field is a parameter
+      resolvedFieldName = parameters[fieldData]
+      return resolvedFieldName if resolvedFieldName? and beginsWithUpperCase resolvedFieldName
+      return null #we were not able to fully resolve the type
+
+    # The field data is not a string, so it's an object-- key field type, value field params
+    name = getOnlyKeyForObject fieldData
+    if beginsWithUpperCase name
+      return name #The name of the parameterized type is static
+    else
+      resolvedFieldName = parameters[name]
+      return resolvedFieldName if resolvedFieldName? and beginsWithUpperCase resolvedFieldName
+      return null #we were not able to fully resolve the type
