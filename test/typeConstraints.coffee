@@ -44,6 +44,8 @@ describe 'Constraints on type parameters', ->
     recognized = recognize 'OuterType', data
     recognized.matched.should.eql true
 
+describe.skip 'add rest of tests here', ->
+  it('needs tests', ->)
 
 #List of tests: test a valid and invalid declaration for each
 #direct match (type A)

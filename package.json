@@ -5,8 +5,8 @@
   "author": "Joseph Junker <joseph.jnk@gmail.com>",
   "dependencies": {},
   "devDependencies": {
-    "mocha": "1.15.x",
-    "should": "2.1.x",
+    "mocha": "*",
+    "should": "*",
     "node-inspector": "x",
     "coffee-script": "1.7.x",
     "gulp": "~3.6.2",

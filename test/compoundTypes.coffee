@@ -18,12 +18,16 @@ describe 'recognizer', ->
 
       recognized = recognize('IntegerField', {aField: 1})
 
-      recognized.matched.should.eql true
-      recognized.data.should.eql {aField: 1}
-      recognized.typedata.type.should.eql 'IntegerField'
-      recognized.typedata.iscontainer.should.eql true
-      recognized.typedata.fields.aField.type.should.eql 'Integer'
-      recognized.typedata.fields.aField.iscontainer.should.eql false
+      recognized.should.match
+        matched: true
+        data: {aField: 1}
+        typedata:
+          type: 'IntegerField'
+          iscontainer: true
+          fields:
+            aField:
+              type: 'Integer'
+              iscontainer: false
 
       recognize('IntegerField', {aField: 1.5}).matched.should.eql false
       recognize('IntegerField', {foo: 1}).matched.should.eql false
@@ -45,16 +49,22 @@ describe 'recognizer', ->
 
       recognized = recognize('ThreeFields', {intField: 1, stringField: '1', objectField: {foo: 2}})
 
-      recognized.matched.should.eql true
-      recognized.data.should.eql {intField: 1, stringField: '1', objectField: {foo: 2}}
-      recognized.typedata.type.should.eql 'ThreeFields'
-      recognized.typedata.iscontainer.should.eql true
-      recognized.typedata.fields.intField.type.should.eql 'Integer'
-      recognized.typedata.fields.intField.iscontainer.should.eql false
-      recognized.typedata.fields.stringField.type.should.eql 'String'
-      recognized.typedata.fields.stringField.iscontainer.should.eql false
-      recognized.typedata.fields.objectField.type.should.eql 'Object'
-      recognized.typedata.fields.objectField.iscontainer.should.eql true
+      recognized.should.match
+        matched: true
+        data: {intField: 1, stringField: '1', objectField: {foo: 2}}
+        typedata:
+          type: 'ThreeFields'
+          iscontainer: true
+          fields:
+            intField:
+              type: 'Integer'
+              iscontainer: false
+            stringField:
+              type: 'String'
+              iscontainer: false
+            objectField:
+              type: 'Object'
+              iscontainer: true
 
       recognize('ThreeFields', {intField: 0, stringField: '', objectField: {}}).matched.should.eql true
       recognize('ThreeFields', {intField: '1', stringField: '1', objectField: {foo: 2}}).matched.should.eql false
@@ -81,14 +91,20 @@ describe 'recognizer', ->
 
       recognized = recognize('Outer', {innerField: {intField: 0} })
 
-      recognized.matched.should.eql true
-      recognized.data.should.eql {innerField: {intField: 0} }
-      recognized.typedata.type.should.eql 'Outer'
-      recognized.typedata.iscontainer.should.eql true
-      recognized.typedata.fields.innerField.type.should.eql 'Inner'
-      recognized.typedata.fields.innerField.iscontainer.should.eql true
-      recognized.typedata.fields.innerField.fields.intField.type.should.eql 'Integer'
-      recognized.typedata.fields.innerField.fields.intField.iscontainer.should.eql false
+      recognized.should.match
+        matched: true
+        data: {innerField: {intField: 0} }
+        typedata:
+          type: 'Outer'
+          iscontainer: true
+          fields:
+            innerField:
+              type: 'Inner'
+              iscontainer: true
+              fields:
+                intField:
+                  type: 'Integer'
+                  iscontainer: false
 
       recognize('Outer', {innerField: {intField: 1} }).matched.should.eql true
       recognize('Inner', {intField: 1}).matched.should.eql true

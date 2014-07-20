@@ -13,7 +13,7 @@ describe 'typeSystem', ->
       error = system.register type
       should.not.exist error
 
-      Object.keys(system.types).should.includeEql type.newtype.name
+      Object.keys(system.types).should.containEql type.newtype.name
 
     it 'should register a interface', ->
       interFace = newinterface: name: 'Interface'
@@ -22,7 +22,7 @@ describe 'typeSystem', ->
       error = system.register interFace
       should.not.exist error
 
-      Object.keys(system.interfaces).should.includeEql interFace.newinterface.name
+      Object.keys(system.interfaces).should.containEql interFace.newinterface.name
 
     it 'should not register the same name twice', ->
       type = newtype: name: 'Type'

@@ -34,29 +34,39 @@ describe 'interfaces', ->
     system.generateParsers()
     recognize = system.getRecognizer()
 
-    debugger
-
     matchedA = recognize 'OuterType', inner: {str: 'foo'}
 
-    matchedA.matched.should.eql true, "did not match first input"
-    matchedA.data.should.eql inner: {str: 'foo'}
-    matchedA.typedata.type.should.eql 'OuterType'
-    matchedA.typedata.iscontainer.should.eql true, "did not recognize first input as a container"
-    matchedA.typedata.fields.inner.type.should.eql 'InnerTypeA'
-    matchedA.typedata.fields.inner.iscontainer.should.eql true, "did not recognize second layer of first input as a container"
-    matchedA.typedata.fields.inner.fields.str.type.should.eql 'String'
-    matchedA.typedata.fields.inner.fields.str.iscontainer.should.eql false
+    matchedA.should.match
+      matched: true
+      data: inner: str: 'foo'
+      typedata:
+        type: 'OuterType'
+        iscontainer: true
+        fields:
+          inner:
+            type: 'InnerTypeA'
+            iscontainer: true
+            fields:
+              str:
+                type: 'String'
+                iscontainer: false
 
     matchedB = recognize 'OuterType', inner: {int: 1}
 
-    matchedB.matched.should.eql true, "did not match second input"
-    matchedB.data.should.eql inner: {int: 1}
-    matchedB.typedata.type.should.eql 'OuterType'
-    matchedB.typedata.iscontainer.should.eql true, "did not recognize second input as a container"
-    matchedB.typedata.fields.inner.type.should.eql 'InnerTypeB'
-    matchedB.typedata.fields.inner.iscontainer.should.eql true, "did not recognize second layer of second input as a container"
-    matchedB.typedata.fields.inner.fields.int.type.should.eql 'Integer'
-    matchedB.typedata.fields.inner.fields.int.iscontainer.should.eql false
+    matchedB.should.match
+      matched: true
+      data: inner: int: 1
+      typedata:
+        type: 'OuterType'
+        iscontainer: true
+        fields:
+          inner:
+            type: 'InnerTypeB'
+            iscontainer: true
+            fields:
+              int:
+                type: 'Integer'
+                iscontainer: false
 
     recognize('OuterType', inner: {foo: 'foo'}).matched.should.eql false
     recognize('OuterType', inner: {int: {}}).matched.should.eql false
@@ -85,11 +95,16 @@ describe 'interfaces', ->
 
     matched = recognize "MemberType", {ownField: 0, classField: 'foo'}
 
-    matched.matched.should.eql true
-    matched.data.should.eql {ownField: 0, classField: 'foo'}
-    matched.typedata.type.should.eql 'MemberType'
-    matched.typedata.iscontainer.should.eql true
-    matched.typedata.fields.ownField.type.should.eql 'Integer'
-    matched.typedata.fields.ownField.iscontainer.should.eql false
-    matched.typedata.fields.classField.type.should.eql 'String'
-    matched.typedata.fields.classField.iscontainer.should.eql false
+    matched.should.match
+    matched: true
+    data: ownField: 0, classField: 'foo'
+    typedata:
+      type: 'MemberType'
+      iscontainer: true
+      fields:
+        ownField:
+          type: 'Integer'
+          iscontainer: false
+        classField:
+          type: 'String'
+          iscontainer: false

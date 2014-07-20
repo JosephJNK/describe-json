@@ -84,9 +84,10 @@ describe 'Field parameter resolution', ->
       [err, res] = selectParametersForField field, parentParameters
 
       should.not.exist err
-      res.typeArg.should.eql 'Number'
-      res.staticParameter.should.eql 'String'
-      res.dynamicParameter.should.eql 'Float'
+      res.should.match
+        typeArg: 'Number'
+        staticParameter: 'String'
+        dynamicParameter: 'Float'
 
 
   describe 'applying parameters', ->
@@ -106,8 +107,8 @@ describe 'Field parameter resolution', ->
 
       [freeParameters, boundParameters] = applyTypeParametersForField fieldData, params
 
-      freeParameters.should.includeEql 'freeParam'
-      freeParameters.should.includeEql 'anotherFreeParam'
+      freeParameters.should.containEql 'freeParam'
+      freeParameters.should.containEql 'anotherFreeParam'
 
       boundParameters.boundParam.should.eql 'Number'
       boundParameters.staticParam.should.eql 'String'
@@ -128,12 +129,12 @@ describe 'Field parameter resolution', ->
 
       [freeParameters, boundParameters] = applyTypeParametersForField parameterizedField, params
 
-      freeParameters.should.includeEql 'unresolved'
+      freeParameters.should.containEql 'unresolved'
 
-      boundParameters.paramType.should.eql 'SomeType'
-      boundParameters.staticParam.should.eql 'String'
-      boundParameters.fieldParameter.should.eql 'Number'
-
+      boundParameters.should.match
+        paramType: 'SomeType'
+        staticParam: 'String'
+        fieldParameter: 'Number'
 
     it 'should handle taking a static type string as input', ->
 
