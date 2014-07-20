@@ -6,29 +6,6 @@
 isResolvedTypeName = (x) -> isString(x) and beginsWithUpperCase(x)
 isParameterName = (x) -> isString(x) and !beginsWithUpperCase(x)
 
-# TODO: There is no way this should be as gnarly as it is... it's probably a symptom of a poorly defined interface
-#       Cleaning up and normalizing the ways these methods are called would probably allow this module to be simplified
-
-applyParametersFromFieldObject = (fieldObject, parameterArguments, freeParameters, boundParameters) ->
-  for paramName, paramArgument of getOnlyValueForObject fieldObject
-    if isResolvedTypeName paramArgument
-      boundParameters[paramName] = paramArgument
-    else
-      resolvedArgument = parameterArguments[paramArgument]
-      applyParameterArgsForPolymorphicType paramName, resolvedArgument, freeParameters, boundParameters
-
-applyParameterArgsForPolymorphicType = (paramName, resolvedArgument, freeParameters, boundParameters) ->
-  if resolvedArgument?
-    boundParameters[paramName] = resolvedArgument
-  else
-    freeParameters.push paramName
-
-applyFieldTypeAsParameter = (typeName, parameterArguments, freeParameters, boundParameters) ->
-  if parameterArguments[typeName]?
-    boundParameters[typeName] = parameterArguments[typeName]
-  else
-    freeParameters.push typeName
-
 selectFieldTypeAsParameter = (fieldType, parentParameters) ->
   if parentParameters[fieldType]?
     result = {}
@@ -36,13 +13,6 @@ selectFieldTypeAsParameter = (fieldType, parentParameters) ->
     return [null, result]
   else
     return [null, {}]
-
-selectResolvedFieldParameters = (fieldParameters, parentParameters, resolvedParameters) ->
-  for paramName, paramValue of fieldParameters
-    if beginsWithUpperCase paramValue
-      resolvedParameters[paramName] = fieldParameters[paramName]
-    else
-      resolvedParameters[paramName] = parentParameters[paramValue]
 
 resolveAllPossibleParameters = (fieldsObj, parameterArguments) ->
   return {} if fieldsObj is undefined
@@ -60,15 +30,15 @@ resolveAllPossibleParameters = (fieldsObj, parameterArguments) ->
 
 module.exports =
 
-  # binds as many parameters as possible to the declared field
+  # returns an object containing the mapping for every resolvable type parameter for this field
+  # resolvedParams are of the form parameterName: resolved type for this parameter
   selectParametersForField: (fieldDeclaration, parentParameters) ->
-    # resolvedParams are of the form parameterName: resolvedParameterValue
 
-    if isResolvedTypeName fieldDeclaration
-      return [null, {}]
+    # There's no parameters if we're given a statically typed field
+    return [null, {}] if isResolvedTypeName fieldDeclaration
 
-    if isParameterName fieldDeclaration
-      return selectFieldTypeAsParameter fieldDeclaration, parentParameters
+    # Our only parameter is for the type of the field, so resolve and return that
+    return selectFieldTypeAsParameter fieldDeclaration, parentParameters if isParameterName fieldDeclaration
 
     fieldName = getOnlyKeyForObject fieldDeclaration
     resolvedParams = {}
@@ -76,7 +46,11 @@ module.exports =
     if isParameterName fieldName
       resolvedParams[fieldName] = parentParameters[fieldName]
 
-    selectResolvedFieldParameters fieldDeclaration[fieldName], parentParameters, resolvedParams
+    for paramName, paramValue of fieldDeclaration[fieldName]
+      if beginsWithUpperCase paramValue
+        resolvedParams[paramName] = paramValue # This parameter has a static type
+      else
+        resolvedParams[paramName] = parentParameters[paramValue] # This parameter has its type passed through
 
     return [null, resolvedParams]
 
