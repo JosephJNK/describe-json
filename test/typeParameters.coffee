@@ -244,7 +244,7 @@ describe 'type parameters', ->
             type: 'Integer'
             iscontainer: false
 
-  it.skip 'should allow parameters to be passed through multiple levels of wrappers', ->
+  it 'should allow parameters to be passed through multiple levels of wrappers', ->
 
     mostOuterInterface = newinterface:
       name: 'MostOuterInterface'
@@ -264,7 +264,7 @@ describe 'type parameters', ->
 
     mostOuterType = newtype:
       name: 'MostOuterType'
-      interfaces: [{'InnerInterface': 'Integer'}]
+      interfaces: [{'InnerInterface': innerParam: 'Integer'}]
       fields:
         outerWrappedField:
           'MiddleType':
@@ -288,11 +288,11 @@ describe 'type parameters', ->
         innerField: 'innerParameter'
 
     data =
-      interfaceField: 'Integer'
+      interfaceField: 5
       outerWrappedField:
         middleWrappedField:
-          innerField: 'String'
-          interfaceField: 'Float'
+          innerField: 'some string'
+          interfaceField: 4.5
 
     system = typeSystem.init()
     system.register mostOuterInterface
@@ -307,41 +307,36 @@ describe 'type parameters', ->
 
     matched = recognize 'MostOuterType', data
 
-    matched.matched.should.eql true
-    matched.data.should.eql firstData
-    matched.typedata.type.should.eql 'OuterType'
-    matched.typedata.typeparameters.should.eql {}
-    matched.typedata.iscontainer.should.eql true
 
-    outerFields = matched.typedata.fields
+    expected =
+      matched: true
+      data: data
+      typedata:
+        type: 'MostOuterType'
+        typeparameters: {}
+        iscontainer: true
+        fields:
+          interfaceField:
+            type: 'Integer'
+            iscontainer: false
+          outerWrappedField:
+            type: 'MiddleType'
+            typeparameters: {middleParameter: 'String', middleInterfaceParameter: 'Float'}
+            iscontainer: true
+            fields:
+              middleWrappedField:
+                type: 'InnerType'
+                typeparameters: {innerParameter: 'String', innerInterfaceParameter: 'Float'}
+                iscontainer: true
+                fields:
+                  innerField:
+                    type: 'String'
+                    iscontainer: false
+                  interfaceField:
+                    type: 'Float'
+                    iscontainer: false
 
-    outerFields.interfaceField.type.should.eql 'Integer'
-    outerFields.interfaceField.typeparameters.should.eql {}
-    outerFields.interfaceField.iscontainer.should.eql false
-
-    outerFields.outerWrappedField.type.should.eql 'MiddleType'
-    outerFields.outerWrappedField.typeparameters.should.eql {middleParameter: 'String', middleInterfaceParameter: 'Float'}
-    outerFields.outerWrappedField.iscontainer.should.eql true
-
-    middleTypeData = outerFields.outerWrappedField.fields.middleField.
-
-    middleTypeData.type.should.eql 'MiddleType'
-    middleTypeData.typeparameters.should.eql {middleParameter: 'String', middleInterfaceParameter: 'Float'}
-    middleTypeData.iscontainer.should.eql true
-
-    innerTypeData = middleTypeData.fields.innerField
-
-    innerTypeData.type.should.eql 'InnerType'
-    innerTypeData.typeparameters.should.eql {innerParameter: 'String', innerInterfaceParameter: 'Float'}
-    innerTypeData.iscontainer.should.eql true
-
-    innerTypeData.fields.innerField.type.should.eql 'String'
-    innerTypeData.fields.innerField.typeparameters.should.eql {}
-    innerTypeData.fields.innerField.iscontainer.should.eql false
-
-    innerTypeData.fields.interfaceField.type.should.eql 'Float'
-    innerTypeData.fields.interfaceField.typeparameters.should.eql {}
-    innerTypeData.fields.interfaceField.iscontainer.should.eql false
+    matched.should.match expected
 
 
 

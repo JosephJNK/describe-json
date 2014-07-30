@@ -37,6 +37,12 @@ module.exports =
     # There's no parameters if we're given a statically typed field
     return [null, {}] if isResolvedTypeName fieldDeclaration
 
+    if !parentParameters?
+      {inspect} = require 'util'
+      console.log "Called selectParametersForField with unresolved type and no type parameters"
+      console.log "field declaration: "
+      console.log inspect fieldDeclaration, depth: null
+
     # Our only parameter is for the type of the field, so resolve and return that
     return selectFieldTypeAsParameter fieldDeclaration, parentParameters if isParameterName fieldDeclaration
 
