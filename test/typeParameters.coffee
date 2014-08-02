@@ -339,30 +339,186 @@ describe 'type parameters', ->
     matched.should.match expected
 
 
+  it "should properly store an interface's type parameters in the metadata when an interface is explicitly recognized", ->
+    outerType = newtype:
+      name: 'OuterType'
+      fields:
+        interfaceField:
+          'AnInterface':
+            firstParam: 'InnerType'
+            secondParam: 'StoredInterface'
 
-describe.skip 'type parameters', ->
+    anInterface = newinterface:
+      name: 'AnInterface'
+      typeparameters: ['firstParam', 'secondParam']
+      fields:
+        firstField: 'firstParam'
+        secondField: 'secondParam'
 
-  it "should properly store a interface's type parameters in the metadata when a interface is explicitly recognized", ->
-    # if a interface is explicitly recognized, the type parameters it contains should be stored in the IR
-    # basically, a type that declares a field to be a interface with given parameters rather than a concrete type
+    thingWithAnInterface = newtype:
+      name: 'ThingWithAnInterface'
+      interfaces: ['AnInterface']
 
-  it "should store the type parameters of a container type that's mixed in from a interface in the metadata", ->
-    # for when we mix in a custom parameterized type; the type parameters should be the ones declared by that time
-    # this lets us mix in a List<int>, for example
+    storedInterface = newinterface:
+      name: 'StoredInterface',
+      fields:
+        aString: 'String'
 
-  it 'should let you pass a interface as a type parameter', ->
+    thingWithStoredInterface = newtype:
+      name: 'ThingWithStoredInterface'
+      interfaces: ['StoredInterface']
 
-  it 'should let a field take multiple type parameters', ->
-    # test combinations of concrete types and type parameters
+    innerType = newtype:
+      name: 'InnerType'
+      fields:
+        anInteger: 'Integer'
 
-  it 'should have validations during registration', ->
+    data =
+      interfaceField:
+        firstField:
+          anInteger: 5
+        secondField:
+          aString: 'foo'
 
-  it 'should let you pass a type parameter to a field which is also parametric', ->
-    #This might exist already
-    
-    #something like
-    # typeParameters: ['aParam', 'anotherParam']
-    # fields:
-    #   foo:
-    #     aParam:
-    #       innerParam: anotherParam
+    system = typeSystem.init()
+    system.register outerType
+    system.register thingWithAnInterface
+    system.register thingWithStoredInterface
+    system.register anInterface
+    system.register storedInterface
+    system.register innerType
+
+    system.generateParsers()
+    recognize = system.getRecognizer()
+
+    matched = recognize 'OuterType', data
+
+    matched.should.match
+      matched: true
+      data: data
+      typedata:
+        type: 'OuterType'
+        fields:
+          interfaceField:
+            type: 'ThingWithAnInterface'
+            typeparameters: { firstParam: 'InnerType', secondParam: 'StoredInterface' }
+            iscontainer: true
+            fields:
+              firstField:
+                type: 'InnerType'
+                iscontainer: true
+                fields:
+                  anInteger:
+                    type: 'Integer'
+              secondField:
+                type: 'ThingWithStoredInterface'
+                iscontainer: true
+                fields:
+                  aString:
+                    type: 'String'
+
+
+  it "should store the type parameters of a container type that's mixed in from an interface in the metadata", ->
+    parameterizedType = newtype:
+      name: 'ParameterizedType'
+      typeparameters: ['aParam']
+      fields:
+        parameterizedField: 'aParam'
+
+    parametricInterface = newinterface:
+      name: 'ParametricInterface'
+      fields:
+        mixedInField:
+          'ParameterizedType':
+            aParam: 'Integer'
+
+    aType = newtype:
+      name: 'AType'
+      interfaces: ['ParametricInterface']
+
+    data =
+      mixedInField:
+        parameterizedField: 5
+
+    system = typeSystem.init()
+    system.register parameterizedType
+    system.register parametricInterface
+    system.register aType
+
+    system.generateParsers()
+    recognize = system.getRecognizer()
+
+    matched = recognize 'AType', data
+
+    matched.should.match
+      matched: true
+      data: data
+      typedata:
+        type: 'AType'
+        iscontainer: true
+        fields:
+          mixedInField:
+            type: 'ParameterizedType'
+            typeparameters: {aParam: 'Integer'}
+            iscontainer: true
+            fields:
+              parameterizedField:
+                type: 'Integer'
+
+  it.skip 'should let you pass a type parameter to a field which is also parametric', ->
+
+    innerType = newtype:
+      name: 'InnerType'
+      typeparameters: ['innerParam']
+      fields:
+        innerField: 'innerParam'
+
+    middleType = newtype:
+      name: 'MiddleType'
+      typeparameters: ['containingType', 'wrappedType']
+      fields:
+        middleField:
+          containingType: 'wrappedType'
+
+    outerType = newtype:
+      name: 'OuterType'
+      fields:
+        outerField:
+          'MiddleType':
+            containingType: 'InnerType'
+            wrappedType: 'Float'
+
+    data =
+      outerField:
+        middleField:
+          innerField: 1.5
+
+    system = typeSystem.init()
+    system.register innerType
+    system.register middleType
+    system.register outerType
+
+    system.generateParsers()
+    recognize = system.getRecognizer()
+
+    debugger;
+    matched = recognize 'OuterType', data
+
+    matched.should.match
+      matched: true
+      data: data
+      typedata:
+        type: 'OuterType'
+        iscontainer: true
+        fields:
+          outerField:
+            type: 'MiddleType'
+            typeparameters: { containingType: 'InnerType', wrappedType: 'Float'}
+            fields:
+              middleField:
+                type: 'InnerType'
+                iscontainer: true
+                typeparameters: {innerParam: 'Float'}
+                fields:
+                  innerField:
+                    type: 'Float'

@@ -80,7 +80,7 @@ describe 'interfaces', ->
         fields:
           ownField: "Integer"
 
-    interFace =
+    anInterface =
       newinterface:
         name: "InterfaceWithField"
         fields:
@@ -88,7 +88,7 @@ describe 'interfaces', ->
 
     system = typeSystem.init()
     system.register memberType
-    system.register interFace
+    system.register anInterface
 
     system.generateParsers()
     recognize = system.getRecognizer()
