@@ -465,7 +465,7 @@ describe 'type parameters', ->
               parameterizedField:
                 type: 'Integer'
 
-  it.skip 'should let you pass a type parameter to a field which is also parametric', ->
+  it 'should let you pass a type parameter to a field which is also parametric', ->
 
     innerType = newtype:
       name: 'InnerType'
@@ -478,7 +478,8 @@ describe 'type parameters', ->
       typeparameters: ['containingType', 'wrappedType']
       fields:
         middleField:
-          containingType: 'wrappedType'
+          containingType:
+            innerParam: 'wrappedType'
 
     outerType = newtype:
       name: 'OuterType'

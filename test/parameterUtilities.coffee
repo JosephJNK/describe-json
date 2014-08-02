@@ -88,21 +88,6 @@ describe 'Field parameter resolution', ->
         staticParameter: 'String'
         dynamicParameter: 'Float'
 
-    it 'should handle a parameterized field that takes a field parameter', ->
-      fieldsObject = containingType: 'wrappedType'
-
-      parentParams =
-        containingType: 'Wrapper'
-        wrappedType: 'Integer'
-
-      [err, res] = selectParametersForField fieldsObject, parentParams
-
-      should.not.exist err
-      res.should.eql
-        containingType: 'Wrapper'
-        wrappedType: 'Integer'
-
-
   describe 'trying to resolve parameters for fields', ->
 
     it 'should resolve any parameters possible', ->
