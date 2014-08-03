@@ -81,6 +81,7 @@ module.exports =
           registry.addTypeDeclaration typeName, typeData
           typeParser = generateRecursiveParser 'type', typeData, interfacemembers, registry
           registry.addParser typeName, typeParser
+        null
 
       types: registeredTypes
       interfaces: registeredInterfaces
