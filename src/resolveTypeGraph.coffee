@@ -51,10 +51,10 @@ dfs = (interfaces, current, visited) ->
   [null, elements]
 
 #This makes a bunch of trees in an object
-#The object contains interface/interface names as keys, and their inheritance trees as values
-#The trees have the typclass/interface as a key, whose value is another object.
+#The object contains interface names as keys, and their inheritance trees as values
+#The trees have the interface name as a key, whose value is another object.
 #   This object has all of the interfaces which this interface extends as keys. Their values are the inheritance trees of these interfaces
-#   Yes, this is a lot of duplication, but it's easier than trying to avoid the duplication. This only runs once at startup so we don't care about efficiency.
+#   This is a lot of duplication, but it only runs once at startup so we don't care about efficiency.
 createInheritanceTree = (interfaces) ->
   resolved = {}
   for interfaceName, interfaceDefinition of interfaces
@@ -164,7 +164,6 @@ module.exports = (types, interfaces) ->
           resolvedTypes[typeName][fieldName] = fieldType
 
   # typefields: keys are the type names, values are the fields that that type has, including mixins
-  #   I think this does something with type parameters, maybe?
   # interfacemembers: keys are interface names, values are arrays of type names, which belong to that interface
   return [null, {
     typefields: resolvedTypes

@@ -3,6 +3,7 @@ resolveTypeGraph = require './resolveTypeGraph'
 nativeTypeRecognizers = require './nativeTypeRecognizers'
 parserRegistry = require './typeRegistry'
 recognizer = require './recognizer'
+validateParameterConstraints = require './typeParameterValidator'
 
 {isString, getOnlyKeyForObject} = require './utilities'
 
@@ -71,6 +72,9 @@ module.exports =
 
         [err, {typefields, interfacemembers}] = resolveTypeGraph registeredTypes, registeredInterfaces
         return err if err
+
+        parameterConstraintError = validateParameterConstraints interfacemembers, registeredTypes, registeredInterfaces
+        return parameterConstraintError if parameterConstraintError
 
         for interfaceName, interfaceData of registeredInterfaces
           registry.addInterfaceDeclaration interfaceName, interfaceData

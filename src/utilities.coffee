@@ -27,8 +27,14 @@ module.exports =
 
   beginsWithUpperCase: (x) -> x[0].toUpperCase() is x[0]
 
+  beginsWithLowerCase: (x) -> x[0].toUpperCase() isnt x[0]
+
   checkType: checkType
 
   isString: (x) -> checkType.call(x) is '[object String]'
 
   isObject: (x) -> checkType.call(x) is '[object Object]'
+
+  destructureSingleKey: (x) ->
+    key = getOnlyKeyForObject x
+    [key, x[key]]

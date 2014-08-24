@@ -16,7 +16,7 @@ describe 'Constraints on type parameters', ->
     middleType = newtype:
       name: 'MiddleType'
       typeparameters:
-        aParam: 'InnerType'
+        [aParam: 'InnerType']
       fields:
         aField: 'aParam'
 
@@ -45,18 +45,65 @@ describe 'Constraints on type parameters', ->
     recognized = recognize 'OuterType', data
     recognized.matched.should.eql true
 
+  it 'should accept valid type parameters passed to a parameterized, parametric field', ->
+    parametricType = newtype:
+      name: 'ParametricType'
+      typeparameters: [
+        {fieldType: 'ParameterizedType'},
+        {param: 'Integer'}
+      ]
+      fields:
+        parametricField:
+          'fieldType':
+            innerParam: 'param'
+
+    parameterizedType = newtype:
+      name: 'ParameterizedType'
+      typeparameters: [innerParam: 'Integer']
+      fields:
+        innerField: 'innerParam'
+
+    outerType = newtype:
+      name: 'OuterType'
+      fields:
+        outerField:
+          'ParametricType':
+            fieldType: 'ParameterizedType'
+            param: 'Integer'
+
+    data =
+      outerField:
+        parametricField:
+          innerField: 5
+
+    system = typeSystem.init()
+    error1 = system.register outerType
+    should.not.exist error1
+    error2 = system.register parameterizedType
+    should.not.exist error2
+    error3 = system.register parametricType
+    should.not.exist error3
+
+    err = system.generateParsers()
+    should.not.exist err
+    recognize = system.getRecognizer()
+
+    recognized = recognize 'OuterType', data
+    recognized.matched.should.eql true
+
   it 'should reject a type parameter that mismatches an explicit type constraint', ->
     outerType = newtype:
       name: 'OuterType'
       fields:
         middleField:
           'MiddleType':
+            irrelevant: 'Integer'
             aParam: 'WrongInnerType'
 
     middleType = newtype:
       name: 'MiddleType'
       typeparameters:
-        aParam: 'InnerType'
+        ['irrelevant', aParam: 'InnerType']
       fields:
         aField: 'aParam'
 
@@ -80,12 +127,21 @@ describe 'Constraints on type parameters', ->
     error4 = system.register wrongInnerType
     should.not.exist error3
 
+    debugger
     err = system.generateParsers()
     err.should.match
       parameterConstraint:
         parameter: {aParam: 'WrongInnerType'}
         containingType: 'OuterType'
 
+
+  it.skip 'should reject invalid type parameters passed to a parameterized, parametric field', ->
+
+  it.skip 'should return an error when a nonexistent parameter is specified', ->
+
+  it.skip 'should allow a parameter that matches its constraints to be used when extending an interface', ->
+
+  it.skip 'should reject a type parameter that mismatches an explicit type constraint when extending an interface', ->
 
   it.skip 'should reject a type parameter that mismatches an interface constraint', ->
 

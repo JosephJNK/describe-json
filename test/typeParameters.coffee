@@ -187,7 +187,7 @@ describe 'type parameters', ->
             iscontainer: false
 
 
-  it 'should let a typeclass pass parameters to a interface which it extends', ->
+  it 'should let an interface pass parameters to a interface which it extends', ->
     outerInterfaceA = newinterface:
       name: 'OuterInterfaceA'
       typeparameters: ['aParameter']
@@ -273,7 +273,7 @@ describe 'type parameters', ->
 
     middleType = newtype:
       name: 'MiddleType'
-      typeParameters: ['middleParameter', 'middleInterfaceParameter']
+      typeparameters: ['middleParameter', 'middleInterfaceParameter']
       fields:
         middleWrappedField:
           'InnerType':
@@ -283,7 +283,7 @@ describe 'type parameters', ->
     innerType = newtype:
       name: 'InnerType'
       interfaces: [{'InnerInterface': innerParam: 'innerInterfaceParameter'}]
-      typeParameters: ['innerParameter', 'innerInterfaceParameter']
+      typeparameters: ['innerParameter', 'innerInterfaceParameter']
       fields:
         innerField: 'innerParameter'
 
@@ -502,7 +502,6 @@ describe 'type parameters', ->
     system.generateParsers()
     recognize = system.getRecognizer()
 
-    debugger;
     matched = recognize 'OuterType', data
 
     matched.should.match
