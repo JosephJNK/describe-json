@@ -1,3 +1,5 @@
+This library is incomplete and temporarily abandoned
+
 describe-json
 =======
 
