@@ -1,4 +1,6 @@
-This library is incomplete and temporarily abandoned
+
+I decided that I went about things the wrong way here. This project is flawed and abandoned, see https://github.com/JosephJNK/kaolin-js for a schema validator that other features may be built on top of.
+
 
 describe-json
 =======
@@ -149,6 +151,3 @@ dispatch {floatField: 'foo'}, [
 ```
 Patterns occurring earlier in the dispatch list take precedence over patterns occuring later. The 'otherwise' pattern is matched if no earlier patterns match.
 
-# Current Development
-
-describe-json is currently under heavy development and is not recommended for use at this time. Implementation of type parameters is the current top priority, followed by more powerful pattern support and increased static checking.
